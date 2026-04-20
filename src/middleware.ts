@@ -1,0 +1,33 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
+
+const SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'default-secret-change-in-production-min-32-chars'
+);
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (pathname === '/admin/login') return NextResponse.next();
+  if (pathname.startsWith('/admin')) {
+    const token = request.cookies.get('portfolio_admin_token')?.value;
+    if (!token) {
+      const loginUrl = new URL('/admin/login', request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+    try {
+      await jwtVerify(token, SECRET);
+      return NextResponse.next();
+    } catch {
+      const loginUrl = new URL('/admin/login', request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ['/admin', '/admin/:path*'],
+};

@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Portfolio color system — dark only */
+:root {
+  color-scheme: dark;
+  --color-background: #0b0f19;
+  --color-surface: #111827;
+  --color-primary: #6366f1;
+  --color-secondary: #22c55e;
+  --color-accent: #f59e0b;
+  --color-foreground: #e5e7eb;
+  --color-muted: #9ca3af;
+  --color-border: #1f2937;
+  --gradient-primary: linear-gradient(135deg, #6366f1, #22c55e);
+  --gradient-cta: linear-gradient(135deg, #f59e0b, #f97316);
+  --gradient-hero-glow: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
+  --gradient-section-divider: linear-gradient(90deg, transparent, #6366f1, transparent);
+  --shadow-card-hover-glow: 0 0 25px rgba(34, 197, 94, 0.15);
+  --radius-card: 20px;
+  --radius-button: 12px;
+  --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.25);
+  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+  --font-geist-sans: 'Geist', system-ui, sans-serif;
+  --font-geist-mono: 'Geist Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-geist-sans);
+  line-height: 1.6;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  /** Indigo → green; hero headline, logo */
+  .text-gradient-primary {
+    background-image: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /** Soft radial glow behind hero (use sparingly) */
+  .hero-backdrop-glow {
+    position: relative;
+  }
+
+  .hero-backdrop-glow::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 10%;
+    transform: translateX(-50%);
+    width: min(90vw, 42rem);
+    height: min(50vh, 16rem);
+    background: var(--gradient-hero-glow);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hero-backdrop-glow > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /** Thin section separator — use on ~10–15% of section breaks */
+  .section-divider-glow {
+    height: 1px;
+    width: 100%;
+    max-width: 28rem;
+    margin-left: auto;
+    margin-right: auto;
+    background: var(--gradient-section-divider);
+    opacity: 0.85;
+  }
+
+  /** Primary CTA: solid amber, gradient on hover */
+  .btn-cta {
+    @apply inline-flex items-center justify-center rounded-button px-5 py-2.5 font-medium text-white transition-all duration-200;
+    background: var(--color-accent);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  }
+
+  .btn-cta:hover {
+    background: var(--gradient-cta);
+    box-shadow: 0 4px 14px rgb(245 158 11 / 0.35);
+  }
+
+  .btn-cta:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .btn-cta:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-cta:disabled:hover {
+    background: var(--color-accent);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  }
+
+  /** Project / case-study cards: flat in light; green hover glow in dark */
+  .card-project {
+    @apply block rounded-card border border-border shadow-card transition-all duration-200;
+    background:
+      radial-gradient(140% 100% at 0% 0%, color-mix(in srgb, var(--color-primary) 22%, transparent), transparent 58%),
+      radial-gradient(120% 90% at 100% 100%, color-mix(in srgb, var(--color-secondary) 20%, transparent), transparent 62%),
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--color-primary) 12%, var(--color-surface) 88%) 0%,
+        var(--color-surface) 48%,
+        color-mix(in srgb, var(--color-secondary) 12%, var(--color-surface) 88%) 100%
+      );
+    box-shadow:
+      var(--shadow-card),
+      inset 0 1px 0 color-mix(in srgb, var(--color-primary) 25%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--color-secondary) 20%, transparent);
+  }
+
+  /* No @apply border-primary/25 — Tailwind cannot resolve opacity on CSS-variable colors in @apply */
+  .card-project:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.08),
+      0 4px 6px -4px rgb(0 0 0 / 0.04),
+      inset 0 1px 0 color-mix(in srgb, var(--color-primary) 35%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--color-secondary) 30%, transparent);
+    transform: translateY(-2px);
+  }
+
+  html.dark .card-project:hover {
+    box-shadow: var(--shadow-card), var(--shadow-card-hover-glow);
+  }
+}
+
+/* Hero rotating subtitle - SEO: keep all text in DOM but visually cycle */
+.hero-subtitle-rotator {
+  min-height: 1.5em;
+  position: relative;
+}
+
+.hero-subtitle-item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+}
+
+.hero-subtitle-item.active {
+  position: relative;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.hero-subtitle-item.exit {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+@keyframes skillFloatGlow {
+  0% {
+    transform: translateY(0);
+    box-shadow: var(--shadow-card);
+  }
+  50% {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card), 0 0 0 1px color-mix(in srgb, var(--color-primary) 22%, transparent);
+  }
+  100% {
+    transform: translateY(0);
+    box-shadow: var(--shadow-card);
+  }
+}
+
+.skills-matrix-grid > article {
+  animation: skillFloatGlow 3.8s ease-in-out infinite;
+}

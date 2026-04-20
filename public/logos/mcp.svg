@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="MCP">
+  <defs>
+    <linearGradient id="mcp-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="108" height="108" rx="24" fill="#0f172a" stroke="url(#mcp-g)" stroke-width="6" />
+  <path d="M26 76V44h8l10 14 10-14h8v32h-8V56l-10 13-10-13v20h-8zm48 0V44h16c7 0 12 5 12 11s-5 11-12 11h-8v10h-8zm8-18h8c3 0 5-1 5-3s-2-3-5-3h-8v6z" fill="url(#mcp-g)"/>
+</svg>
