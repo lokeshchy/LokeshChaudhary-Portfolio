@@ -3,14 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env DATABASE_URL=file:./prisma/dev.db next dev",
-    "build": "cross-env DATABASE_URL=file:./prisma/dev.db next build",
-    "start": "cross-env DATABASE_URL=file:./prisma/dev.db next start",
+    "dev": "next dev",
+    "build": "prisma migrate deploy && next build",
+    "start": "next start",
+    "postinstall": "prisma generate",
     "lint": "next lint",
     "db:generate": "prisma generate",
-    "db:push": "cross-env DATABASE_URL=file:./prisma/dev.db prisma db push",
-    "db:seed": "cross-env DATABASE_URL=file:./prisma/dev.db tsx prisma/seed.ts",
-    "db:studio": "cross-env DATABASE_URL=file:./prisma/dev.db prisma studio"
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

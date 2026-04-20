@@ -2,10 +2,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// SQLite: set DATABASE_URL=file:./prisma/dev.db (see package.json scripts; do not use a different path or admin and the site will read different DBs)
+// PostgreSQL: set DATABASE_URL in your environment (local .env / Vercel env vars)
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {

@@ -136,9 +136,9 @@ Everything below is done in the **Admin** at http://localhost:3000/admin (after 
 If you want to use a `.env` file (e.g. for production or a custom DB):
 
 - Create `.env` in the project root.
-- For **SQLite**, `DATABASE_URL` must start with `file:`:
+- For **PostgreSQL** (recommended for production/Vercel), use a connection string:
   ```env
-  DATABASE_URL="file:./prisma/dev.db"
+  DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME?sslmode=require"
   JWT_SECRET="your-secret-at-least-32-chars"
   NEXT_PUBLIC_APP_URL="http://localhost:3000"
   OTP_LOGIN_EMAIL="lokeshchaudhary.dev@gmail.com"
@@ -150,7 +150,7 @@ If you want to use a `.env` file (e.g. for production or a custom DB):
   SMTP_PASS="your-gmail-app-password"
   SMTP_FROM="Lokesh Portfolio <lokeshchaudhary.dev@gmail.com>"
   ```
-- The `dev` / `build` / `start` scripts already set `DATABASE_URL` for SQLite if you don’t use `.env`.
+- For Vercel + Neon integration, point `DATABASE_URL` to the provider's Prisma-compatible URL.
 
 ---
 
