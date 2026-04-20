@@ -1,9 +1,8 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { env } from '@/lib/env.server';
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'default-secret-change-in-production-min-32-chars'
-);
+const SECRET = new TextEncoder().encode(env.jwtSecret);
 
 const COOKIE_NAME = 'portfolio_admin_token';
 
@@ -41,7 +40,7 @@ export async function setAuthCookie(token: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: env.isProduction,
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7,
     path: '/',

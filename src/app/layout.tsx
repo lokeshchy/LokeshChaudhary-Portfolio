@@ -15,7 +15,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} dark`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} dark`}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <body className="min-h-screen antialiased font-sans">
         {children}
       </body>

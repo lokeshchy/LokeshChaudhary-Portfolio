@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { env } from '@/lib/env.server';
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'default-secret-change-in-production-min-32-chars'
-);
+const SECRET = new TextEncoder().encode(env.jwtSecret);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname === '/admin/login') return NextResponse.next();
+  if (
+    pathname === '/admin/login' ||
+    pathname === '/admin/forgot-password' ||
+    pathname === '/admin/reset-password'
+  ) {
+    return NextResponse.next();
+  }
   if (pathname.startsWith('/admin')) {
     const token = request.cookies.get('portfolio_admin_token')?.value;
     if (!token) {

@@ -141,6 +141,14 @@ If you want to use a `.env` file (e.g. for production or a custom DB):
   DATABASE_URL="file:./prisma/dev.db"
   JWT_SECRET="your-secret-at-least-32-chars"
   NEXT_PUBLIC_APP_URL="http://localhost:3000"
+  OTP_LOGIN_EMAIL="lokeshchaudhary.dev@gmail.com"
+  OTP_SECRET="another-strong-secret-at-least-32-chars"
+  SMTP_HOST="smtp.gmail.com"
+  SMTP_PORT="587"
+  SMTP_SECURE="false"
+  SMTP_USER="lokeshchaudhary.dev@gmail.com"
+  SMTP_PASS="your-gmail-app-password"
+  SMTP_FROM="Lokesh Portfolio <lokeshchaudhary.dev@gmail.com>"
   ```
 - The `dev` / `build` / `start` scripts already set `DATABASE_URL` for SQLite if you don’t use `.env`.
 
