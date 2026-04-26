@@ -1,5 +1,6 @@
 import type { Experience, Project, Blog, Skill } from '@prisma/client';
 import { prisma } from '@/lib/db';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export type ExperienceItem = Omit<Experience, 'description'> & { description: string[] };
 export type ProjectItem = Omit<Project, 'techStack' | 'imageGallery'> & { techStack: string[]; imageGallery: string[] };
@@ -7,6 +8,7 @@ export type BlogItem = Omit<Blog, 'tags'> & { tags: string[] };
 export type SkillItem = Skill;
 
 export async function getPageBySlug(slug: string) {
+  noStore();
   const page = await prisma.page.findUnique({ where: { slug } });
   if (!page) return null;
   return {
@@ -16,12 +18,14 @@ export async function getPageBySlug(slug: string) {
 }
 
 export async function getSettings() {
+  noStore();
   const row = await prisma.setting.findUnique({ where: { key: 'global' } });
   if (!row) return null;
   return JSON.parse(row.value || '{}');
 }
 
 export async function getExperienceList(): Promise<ExperienceItem[]> {
+  noStore();
   const list = await prisma.experience.findMany({
     where: { visible: true },
     orderBy: { startDate: 'desc' },
@@ -33,6 +37,7 @@ export async function getExperienceList(): Promise<ExperienceItem[]> {
 }
 
 export async function getProjectsList(): Promise<ProjectItem[]> {
+  noStore();
   const list = await prisma.project.findMany({ orderBy: { order: 'asc' } });
   return list.map((p) => ({
     ...p,
@@ -42,6 +47,7 @@ export async function getProjectsList(): Promise<ProjectItem[]> {
 }
 
 export async function getProjectBySlug(slug: string) {
+  noStore();
   const p = await prisma.project.findUnique({ where: { slug } });
   if (!p) return null;
   return {
@@ -52,6 +58,7 @@ export async function getProjectBySlug(slug: string) {
 }
 
 export async function getBlogList(publishedOnly = true): Promise<BlogItem[]> {
+  noStore();
   const list = await prisma.blog.findMany({
     orderBy: { publishedAt: 'desc' },
     where: publishedOnly ? { published: true } : undefined,
@@ -63,6 +70,7 @@ export async function getBlogList(publishedOnly = true): Promise<BlogItem[]> {
 }
 
 export async function getBlogBySlug(slug: string) {
+  noStore();
   const b = await prisma.blog.findUnique({ where: { slug } });
   if (!b || !b.published) return null;
   return {
@@ -72,5 +80,6 @@ export async function getBlogBySlug(slug: string) {
 }
 
 export async function getSkillsList(): Promise<SkillItem[]> {
+  noStore();
   return prisma.skill.findMany({ orderBy: { order: 'asc' } });
 }
