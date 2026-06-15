@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getBlogList } from '@/lib/data';
+import { Reveal, RevealItem } from '@/components/motion/Reveal';
 
 export const metadata = {
   title: 'Blog',
@@ -11,58 +12,59 @@ export default async function BlogPage() {
 
   return (
     <div className="max-w-content mx-auto px-6 py-12">
-      <h1 className="text-3xl font-bold text-primary mb-2">Blog</h1>
-      <p className="text-muted mb-12">Thoughts and updates.</p>
+      {/* Page header */}
+      <Reveal className="mb-10">
+        <p className="text-xs font-mono uppercase tracking-widest mb-2" style={{ color: 'rgba(45,212,191,0.55)' }}>
+          ~/blog
+        </p>
+        <h1 className="text-3xl md:text-4xl font-bold text-gradient-primary">Blog</h1>
+        <p className="text-muted mt-2">Thoughts and updates.</p>
+        <div className="section-divider-glow mt-5" style={{ marginLeft: 0, maxWidth: '8rem' }} />
+      </Reveal>
 
-      <div className="space-y-6 max-w-2xl">
+      <Reveal stagger={0.08} className="space-y-4 max-w-2xl">
         {posts.map((post) => (
-          <Link
-            key={post.id}
-            href={`/blog/${post.slug}`}
-            className={`card-project p-6 ${flashCardTone(post.title)}`}
-          >
-            <h2 className="text-xl font-semibold text-primary">{post.title}</h2>
-            {post.excerpt && (
-              <p className="text-muted mt-2 line-clamp-2">{post.excerpt}</p>
-            )}
-            <p className="text-sm text-muted mt-3">
-              {post.publishedAt
-                ? new Date(post.publishedAt).toLocaleDateString(undefined, {
+          <RevealItem key={post.id}>
+          <Link href={`/blog/${post.slug}`} className="card-project p-5 flex gap-4 items-start">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">
+                {post.title}
+              </h2>
+              {post.excerpt && (
+                <p className="text-muted text-sm mt-1 line-clamp-2 leading-relaxed">{post.excerpt}</p>
+              )}
+              {post.tags && post.tags.length > 0 && (
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {post.tags.slice(0, 3).map((t) => (
+                    <span key={t} className="tag-tech" style={{ fontSize: '0.62rem' }}>
+                      #{t}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="shrink-0 text-right">
+              {post.publishedAt && (
+                <p className="text-xs font-mono" style={{ color: 'rgba(100,116,139,0.7)' }}>
+                  {new Date(post.publishedAt).toLocaleDateString(undefined, {
                     year: 'numeric',
-                    month: 'long',
+                    month: 'short',
                     day: 'numeric',
-                  })
-                : ''}
-            </p>
-            {post.tags && post.tags.length > 0 && (
-              <div className="flex gap-2 mt-2">
-                {post.tags.map((t) => (
-                  <span key={t} className="text-xs text-secondary">
-                    #{t}
-                  </span>
-                ))}
-              </div>
-            )}
+                  })}
+                </p>
+              )}
+              <span className="text-xs mt-1 block" style={{ color: 'rgba(45,212,191,0.5)' }}>
+                Read →
+              </span>
+            </div>
           </Link>
+          </RevealItem>
         ))}
-      </div>
+      </Reveal>
 
       {posts.length === 0 && (
         <p className="text-muted">No posts yet.</p>
       )}
     </div>
   );
-}
-
-function flashCardTone(seed: string): string {
-  const tones = [
-    'from-primary/20 via-surface to-surface border-primary/35',
-    'from-secondary/20 via-surface to-surface border-secondary/35',
-    'from-accent/20 via-surface to-surface border-accent/35',
-    'from-indigo-500/20 via-surface to-surface border-indigo-400/35',
-    'from-cyan-500/20 via-surface to-surface border-cyan-400/35',
-    'from-fuchsia-500/20 via-surface to-surface border-fuchsia-400/35',
-  ];
-  const idx = Array.from(seed).reduce((a, ch) => a + ch.charCodeAt(0), 0) % tones.length;
-  return `bg-gradient-to-br ${tones[idx]}`;
 }

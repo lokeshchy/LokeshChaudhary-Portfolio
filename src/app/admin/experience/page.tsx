@@ -8,6 +8,7 @@ type Experience = {
   role: string;
   organization: string;
   location?: string;
+  workMode?: string | null;
   startDate: string;
   endDate: string;
   description: string[];
@@ -51,6 +52,7 @@ export default function AdminExperiencePage() {
               <th className="text-left text-sm font-medium text-muted px-4 py-3">Organization</th>
               <th className="text-left text-sm font-medium text-muted px-4 py-3">Dates</th>
               <th className="text-left text-sm font-medium text-muted px-4 py-3">Type</th>
+              <th className="text-left text-sm font-medium text-muted px-4 py-3">Work mode</th>
               <th className="text-left text-sm font-medium text-muted px-4 py-3">Visible</th>
               <th className="w-24" />
             </tr>
@@ -64,6 +66,7 @@ export default function AdminExperiencePage() {
                   {e.startDate} – {e.endDate}
                 </td>
                 <td className="px-4 py-3 text-muted text-sm">{e.type}</td>
+                <td className="px-4 py-3 text-muted text-sm">{e.workMode || '—'}</td>
                 <td className="px-4 py-3">{e.visible ? 'Yes' : 'No'}</td>
                 <td className="px-4 py-3 flex gap-2">
                   <Link

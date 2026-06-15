@@ -40,3 +40,40 @@ public/certificates/
 .env
 .env.local
 .env*.local
+.env.development
+.env.production
+.env.test
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+coverage/
+.nyc_output/
+
+# Caches
+.eslintcache
+.cache/
+.turbo/
+
+# Deployment
+.vercel/
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Editor / IDE
+*.swp
+*.swo
+*~
+.cursor/
+.claude/
+
+# Certificates & keys
+*.pem
+*.key
+
+# Misc temp files
+*.tmp
+*.temp

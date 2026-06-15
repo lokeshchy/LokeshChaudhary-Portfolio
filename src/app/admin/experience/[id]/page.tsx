@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { EXPERIENCE_TYPES, WORK_MODES } from '@/lib/experience-constants';
 
 type Experience = {
   id: string;
   role: string;
   organization: string;
   location?: string;
+  workMode?: string | null;
   startDate: string;
   endDate: string;
   description: string[];
@@ -16,8 +18,6 @@ type Experience = {
   order: number;
   visible: boolean;
 };
-
-const TYPES = ['Work', 'Research', 'Internship', 'Volunteer'];
 
 export default function AdminExperienceEditPage() {
   const params = useParams();
@@ -34,6 +34,7 @@ export default function AdminExperienceEditPage() {
         role: '',
         organization: '',
         location: '',
+        workMode: '',
         startDate: '',
         endDate: 'Present',
         description: [],
@@ -125,19 +126,38 @@ export default function AdminExperienceEditPage() {
             />
           </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-muted mb-1">Type</label>
-          <select
-            value={entry.type}
-            onChange={(e) => setEntry((p) => (p ? { ...p, type: e.target.value } : p))}
-            className="w-full px-3 py-2 border border-border rounded-button bg-background"
-          >
-            {TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-muted mb-1">Type</label>
+            <select
+              value={entry.type}
+              onChange={(e) => setEntry((p) => (p ? { ...p, type: e.target.value } : p))}
+              className="w-full px-3 py-2 border border-border rounded-button bg-background"
+            >
+              {EXPERIENCE_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-muted mb-1">Work mode</label>
+            <select
+              value={entry.workMode ?? ''}
+              onChange={(e) =>
+                setEntry((p) => (p ? { ...p, workMode: e.target.value || null } : p))
+              }
+              className="w-full px-3 py-2 border border-border rounded-button bg-background"
+            >
+              <option value="">Not specified</option>
+              {WORK_MODES.map((mode) => (
+                <option key={mode} value={mode}>
+                  {mode}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-muted mb-1">Description (bullet points, one per line)</label>

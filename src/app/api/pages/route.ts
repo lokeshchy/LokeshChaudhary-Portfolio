@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   const slug = String(body.slug ?? '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   const title = String(body.title ?? 'Untitled');
   if (!slug) return NextResponse.json({ error: 'Slug required' }, { status: 400 });
-  const systemSlugs = ['home', 'about', 'projects', 'blog', 'experience', 'contact'];
+  const systemSlugs = ['home', 'about', 'projects', 'blog', 'experience'];
   if (systemSlugs.includes(slug)) return NextResponse.json({ error: 'Cannot create system page with this slug' }, { status: 400 });
   const existing = await prisma.page.findUnique({ where: { slug } });
   if (existing) return NextResponse.json({ error: 'Page with this slug already exists' }, { status: 400 });

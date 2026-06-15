@@ -2,30 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Portfolio color system — dark only */
+/* ─── Design tokens ────────────────────────────────────── */
 :root {
   color-scheme: dark;
-  --color-background: #0b0f19;
-  --color-surface: #111827;
-  --color-primary: #6366f1;
-  --color-secondary: #22c55e;
-  --color-accent: #f59e0b;
-  --color-foreground: #e5e7eb;
-  --color-muted: #9ca3af;
-  --color-border: #1f2937;
-  --gradient-primary: linear-gradient(135deg, #6366f1, #22c55e);
-  --gradient-cta: linear-gradient(135deg, #f59e0b, #f97316);
-  --gradient-hero-glow: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
-  --gradient-section-divider: linear-gradient(90deg, transparent, #6366f1, transparent);
-  --shadow-card-hover-glow: 0 0 25px rgba(34, 197, 94, 0.15);
-  --radius-card: 20px;
-  --radius-button: 12px;
-  --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.25);
-  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+
+  /* Base surfaces */
+  --color-background: #070c18;
+  --color-surface: #0c1525;
+  --color-surface-raised: #111e34;
+
+  /* Accent palette — used sparingly */
+  --color-primary: #2dd4bf;    /* teal-cyan — headings, active, hover borders */
+  --color-secondary: #8b5cf6;  /* violet — tags, chips, secondary accents   */
+  --color-accent: #2dd4bf;
+
+  /* Text */
+  --color-foreground: #e2e8f0;
+  --color-muted: #64748b;
+
+  /* Structural */
+  --color-border: rgba(255, 255, 255, 0.07);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #2dd4bf 0%, #8b5cf6 100%);
+  --gradient-cta: linear-gradient(135deg, #2dd4bf 0%, #06b6d4 100%);
+  --gradient-hero-glow: radial-gradient(ellipse 70% 70% at 18% 28%, rgba(45, 212, 191, 0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 70% at 85% 70%, rgba(139, 92, 246, 0.12) 0%, transparent 62%),
+    radial-gradient(ellipse 120% 80% at 50% -10%, rgba(45, 212, 191, 0.08) 0%, transparent 70%);
+  --gradient-section-divider: linear-gradient(90deg, transparent 0%, rgba(45, 212, 191, 0.55) 35%, rgba(139, 92, 246, 0.45) 65%, transparent 100%);
+
+  /* Shadows */
+  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-card-hover-glow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 28px rgba(45, 212, 191, 0.1);
+
+  /* Radii */
+  --radius-card: 14px;
+  --radius-button: 8px;
+
+  /* Fonts */
   --font-geist-sans: 'Geist', system-ui, sans-serif;
   --font-geist-mono: 'Geist Mono', monospace;
 }
 
+/* ─── Reset ──────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
   padding: 0;
@@ -34,13 +54,17 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
+/* ─── Dot-grid background (very subtle geomatics nod) ─────── */
 body {
-  background: var(--color-background);
+  background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-geist-sans);
   line-height: 1.6;
+  background-image: radial-gradient(rgba(45, 212, 191, 0.045) 1px, transparent 1px);
+  background-size: 30px 30px;
 }
 
 @layer utilities {
@@ -49,8 +73,10 @@ body {
   }
 }
 
+/* ─── Component classes ──────────────────────────────────── */
 @layer components {
-  /** Indigo → green; hero headline, logo */
+
+  /* Gradient text — hero name, section headings */
   .text-gradient-primary {
     background-image: var(--gradient-primary);
     -webkit-background-clip: text;
@@ -59,116 +85,183 @@ body {
     color: transparent;
   }
 
-  /** Soft radial glow behind hero (use sparingly) */
+  /* Hero ambient glow — backdrop only */
   .hero-backdrop-glow {
     position: relative;
+    isolation: isolate;
   }
 
   .hero-backdrop-glow::before {
     content: '';
     position: absolute;
-    left: 50%;
-    top: 10%;
-    transform: translateX(-50%);
-    width: min(90vw, 42rem);
-    height: min(50vh, 16rem);
+    inset: 0;
     background: var(--gradient-hero-glow);
     pointer-events: none;
-    z-index: 0;
+    z-index: -1;
   }
 
-  .hero-backdrop-glow > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  /** Thin section separator — use on ~10–15% of section breaks */
+  /* Section separator */
   .section-divider-glow {
     height: 1px;
     width: 100%;
-    max-width: 28rem;
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 30rem;
+    margin-inline: auto;
     background: var(--gradient-section-divider);
-    opacity: 0.85;
+    opacity: 0.7;
   }
 
-  /** Primary CTA: solid amber, gradient on hover */
-  .btn-cta {
-    @apply inline-flex items-center justify-center rounded-button px-5 py-2.5 font-medium text-white transition-all duration-200;
-    background: var(--color-accent);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  /* ── Glass card base ── */
+  .card-glass {
+    background: rgba(11, 19, 34, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    transition: all 0.22s ease;
   }
 
-  .btn-cta:hover {
-    background: var(--gradient-cta);
-    box-shadow: 0 4px 14px rgb(245 158 11 / 0.35);
-  }
-
-  .btn-cta:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-  }
-
-  .btn-cta:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .btn-cta:disabled:hover {
-    background: var(--color-accent);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
-  }
-
-  /** Project / case-study cards: flat in light; green hover glow in dark */
-  .card-project {
-    @apply block rounded-card border border-border shadow-card transition-all duration-200;
-    background:
-      radial-gradient(140% 100% at 0% 0%, color-mix(in srgb, var(--color-primary) 22%, transparent), transparent 58%),
-      radial-gradient(120% 90% at 100% 100%, color-mix(in srgb, var(--color-secondary) 20%, transparent), transparent 62%),
-      linear-gradient(
-        145deg,
-        color-mix(in srgb, var(--color-primary) 12%, var(--color-surface) 88%) 0%,
-        var(--color-surface) 48%,
-        color-mix(in srgb, var(--color-secondary) 12%, var(--color-surface) 88%) 100%
-      );
-    box-shadow:
-      var(--shadow-card),
-      inset 0 1px 0 color-mix(in srgb, var(--color-primary) 25%, transparent),
-      inset 0 -1px 0 color-mix(in srgb, var(--color-secondary) 20%, transparent);
-  }
-
-  /* No @apply border-primary/25 — Tailwind cannot resolve opacity on CSS-variable colors in @apply */
-  .card-project:hover {
-    border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
-    box-shadow:
-      0 10px 15px -3px rgb(0 0 0 / 0.08),
-      0 4px 6px -4px rgb(0 0 0 / 0.04),
-      inset 0 1px 0 color-mix(in srgb, var(--color-primary) 35%, transparent),
-      inset 0 -1px 0 color-mix(in srgb, var(--color-secondary) 30%, transparent);
+  .card-glass:hover {
+    background: rgba(16, 28, 52, 0.85);
+    border-color: rgba(45, 212, 191, 0.22);
+    box-shadow: var(--shadow-card-hover-glow);
     transform: translateY(-2px);
   }
 
-  html.dark .card-project:hover {
-    box-shadow: var(--shadow-card), var(--shadow-card-hover-glow);
+  /* Project / blog card */
+  .card-project {
+    display: block;
+    background: rgba(11, 19, 34, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    transition: all 0.22s ease;
+  }
+
+  .card-project:hover {
+    background: rgba(16, 28, 52, 0.88);
+    border-color: rgba(45, 212, 191, 0.22);
+    box-shadow: var(--shadow-card-hover-glow);
+    transform: translateY(-2px);
+  }
+
+  /* ── Buttons ── */
+  .btn-cta,
+  .btn-primary {
+    @apply inline-flex items-center justify-center font-medium transition-all duration-200 whitespace-nowrap;
+    padding: 0.6rem 1.4rem;
+    border-radius: var(--radius-button);
+    background: var(--color-primary);
+    color: #061018;
+    font-size: 0.875rem;
+    letter-spacing: 0.015em;
+    box-shadow: 0 0 22px rgba(45, 212, 191, 0.28);
+  }
+
+  .btn-cta:hover,
+  .btn-primary:hover {
+    background: color-mix(in srgb, var(--color-primary) 88%, white 12%);
+    box-shadow: 0 0 32px rgba(45, 212, 191, 0.45);
+    transform: translateY(-1px);
+  }
+
+  .btn-cta:active,
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center font-medium transition-all duration-200 whitespace-nowrap;
+    padding: 0.6rem 1.4rem;
+    border-radius: var(--radius-button);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--color-foreground);
+    font-size: 0.875rem;
+    letter-spacing: 0.015em;
+  }
+
+  .btn-outline:hover {
+    border-color: rgba(45, 212, 191, 0.35);
+    background: rgba(45, 212, 191, 0.06);
+    color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+
+  /* ── Tech / skill tags ── */
+  .tag-tech {
+    @apply inline-flex items-center gap-1;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    border: 1px solid rgba(139, 92, 246, 0.22);
+    background: rgba(139, 92, 246, 0.09);
+    color: #a78bfa;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  /* Category label (monospace) */
+  .tag-category {
+    font-family: var(--font-geist-mono);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(45, 212, 191, 0.55);
+  }
+
+  /* Skill chip */
+  .skill-chip {
+    @apply inline-flex items-center gap-2 transition-all duration-200;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(11, 19, 34, 0.7);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-foreground);
+  }
+
+  .skill-chip:hover {
+    border-color: rgba(45, 212, 191, 0.28);
+    background: rgba(45, 212, 191, 0.05);
+    color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+
+  .work-mode-badge {
+    @apply shrink-0 inline-flex items-center text-[10px] font-mono px-1.5 py-0.5 rounded;
+    border: 1px solid rgba(45, 212, 191, 0.25);
+    color: rgba(45, 212, 191, 0.85);
+    background: rgba(45, 212, 191, 0.08);
+  }
+
+  /* Timeline dot */
+  .timeline-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    box-shadow: 0 0 8px rgba(45, 212, 191, 0.5);
+    flex-shrink: 0;
   }
 }
 
-/* Hero rotating subtitle - SEO: keep all text in DOM but visually cycle */
+/* ── Hero rotating subtitle ──────────────────────────────── */
 .hero-subtitle-rotator {
   min-height: 1.5em;
   position: relative;
+  display: inline-block;
 }
 
 .hero-subtitle-item {
   position: absolute;
   left: 0;
   top: 0;
-  width: 100%;
   opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateY(6px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
   pointer-events: none;
+  white-space: nowrap;
 }
 
 .hero-subtitle-item.active {
@@ -180,24 +273,435 @@ body {
 
 .hero-subtitle-item.exit {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-6px);
 }
 
-@keyframes skillFloatGlow {
-  0% {
-    transform: translateY(0);
-    box-shadow: var(--shadow-card);
+/* ── Skill chip hover glow keyframe ─────────────────────── */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0px rgba(45, 212, 191, 0); }
+  50%       { box-shadow: 0 0 10px rgba(45, 212, 191, 0.2); }
+}
+
+/* ── Skills marquee (news ticker) ────────────────────────── */
+.skills-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 6%,
+    black 94%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 6%,
+    black 94%,
+    transparent
+  );
+}
+
+.skills-marquee-track {
+  display: flex;
+  width: max-content;
+  gap: 0.5rem;
+  animation: skills-marquee-scroll var(--marquee-duration, 45s) linear infinite;
+}
+
+.skills-marquee-track-reverse {
+  animation-direction: reverse;
+}
+
+.skills-marquee:hover .skills-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes skills-marquee-scroll {
+  from {
+    transform: translateX(0);
   }
-  50% {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-card), 0 0 0 1px color-mix(in srgb, var(--color-primary) 22%, transparent);
-  }
-  100% {
-    transform: translateY(0);
-    box-shadow: var(--shadow-card);
+  to {
+    transform: translateX(-50%);
   }
 }
 
-.skills-matrix-grid > article {
-  animation: skillFloatGlow 3.8s ease-in-out infinite;
+@media (prefers-reduced-motion: reduce) {
+  .skills-marquee-track {
+    animation: none;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+}
+
+/* ── Certification horizontal carousel (manual, paginated) ─ */
+.cert-slider {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
+  padding-block: 0.25rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.cert-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.cert-marquee-item {
+  width: 250px;
+  flex: none;
+  scroll-snap-align: start;
+}
+
+/* Pagination indicator dots */
+.cert-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+
+.cert-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: width 0.25s ease, background 0.25s ease;
+}
+
+.cert-dot:hover {
+  background: rgba(45, 212, 191, 0.5);
+}
+
+.cert-dot-active {
+  width: 22px;
+  background: var(--color-primary);
+}
+
+/* Vertical pagination dots (experience) */
+.exp-dots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.exp-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: height 0.25s ease, background 0.25s ease;
+}
+
+.exp-dot:hover {
+  background: rgba(45, 212, 191, 0.5);
+}
+
+.exp-dot-active {
+  height: 22px;
+  background: var(--color-primary);
+}
+
+/* ── Experience vertical slider (manual) ─────────────────── */
+.exp-slider {
+  height: var(--exp-viewport, 540px);
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.exp-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.exp-slider > * {
+  scroll-snap-align: start;
+}
+
+/* Round nav buttons shared by both sliders */
+.slider-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  background: rgba(11, 19, 34, 0.85);
+  color: var(--color-primary);
+  transition: all 0.2s ease;
+}
+
+.slider-nav-btn:hover:not(:disabled) {
+  background: rgba(45, 212, 191, 0.14);
+  border-color: rgba(45, 212, 191, 0.55);
+}
+
+.slider-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── Certification flip cards (compact, width-first) ─────── */
+.cert-flip-scene {
+  perspective: 1000px;
+  height: 176px;
+}
+
+.cert-flip-static {
+  height: 176px;
+}
+
+.cert-flip-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 176px;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.cert-flip-card.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.cert-flip-card:focus-visible {
+  outline: 2px solid rgba(45, 212, 191, 0.6);
+  outline-offset: 2px;
+  border-radius: var(--radius-card);
+}
+
+.cert-flip-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.cert-flip-back {
+  transform: rotateY(180deg);
+}
+
+.cert-flip-face.card-project:hover {
+  transform: none;
+  box-shadow: var(--shadow-card);
+}
+
+.cert-flip-back.card-project:hover {
+  transform: rotateY(180deg);
+}
+
+.cert-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(3, 8, 18, 0.92);
+  backdrop-filter: blur(8px);
+}
+
+.cert-fullscreen-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(11, 19, 34, 0.85);
+  color: var(--color-foreground);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.cert-fullscreen-close:hover {
+  border-color: rgba(45, 212, 191, 0.45);
+  background: rgba(45, 212, 191, 0.12);
+  color: var(--color-primary);
+}
+
+.cert-fullscreen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: min(96vw, 72rem);
+  max-height: calc(100vh - 3rem);
+}
+
+.cert-fullscreen-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-align: center;
+}
+
+.cert-fullscreen-image {
+  max-width: 100%;
+  max-height: calc(100vh - 6rem);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cert-flip-card {
+    transition: none;
+  }
+}
+
+/* ── Hero gradient orbs ─────────────────────────────────────── */
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(28px, -20px) scale(1.04); }
+  66%       { transform: translate(-18px, 26px) scale(0.97); }
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(60px);
+  will-change: transform;
+}
+
+.hero-orb-1 {
+  width: 640px;
+  height: 640px;
+  top: -140px;
+  left: 8%;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.1) 0%, transparent 70%);
+  animation: float-orb 22s ease-in-out infinite;
+}
+
+.hero-orb-2 {
+  width: 520px;
+  height: 520px;
+  bottom: -120px;
+  right: 4%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.09) 0%, transparent 70%);
+  animation: float-orb 30s ease-in-out infinite reverse;
+}
+
+/* ── Hero scroll cue ────────────────────────────────────────── */
+.scroll-cue-mouse {
+  position: relative;
+  display: block;
+  width: 22px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+}
+
+.scroll-cue-dot {
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 3px;
+  height: 7px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: #2dd4bf;
+  animation: scroll-cue-bob 1.8s ease-in-out infinite;
+}
+
+@keyframes scroll-cue-bob {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  60%      { transform: translateY(10px); opacity: 0.25; }
+}
+
+.scroll-cue {
+  animation: scroll-cue-fade 2.4s ease-in-out infinite;
+}
+
+@keyframes scroll-cue-fade {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+/* ── Section overline ───────────────────────────────────────── */
+.section-overline {
+  display: block;
+  font-family: var(--font-geist-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(45, 212, 191, 0.45);
+}
+
+/* ── Gradient top-border card ───────────────────────────────── */
+.card-gradient-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-gradient-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  z-index: 1;
+}
+
+.card-gradient-border:hover::before {
+  opacity: 0.75;
+}
+
+/* ── Experience card (glass variant used on home) ───────────── */
+.exp-card-home {
+  background: rgba(12, 21, 37, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-card);
+  transition: all 0.22s ease;
+}
+
+.exp-card-home:hover {
+  border-color: rgba(45, 212, 191, 0.2);
+  background: rgba(16, 28, 50, 0.8);
+  box-shadow: var(--shadow-card-hover-glow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-orb {
+    animation: none;
+  }
+  .scroll-cue,
+  .scroll-cue-dot {
+    animation: none;
+  }
 }

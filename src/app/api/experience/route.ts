@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAuth } from '@/lib/api-auth';
 import { getSession } from '@/lib/auth';
+import { parseWorkMode } from '@/lib/experience-constants';
 
 function parseExperience(body: Record<string, unknown>) {
   return {
     role: String(body.role ?? ''),
     organization: String(body.organization ?? ''),
     location: body.location ? String(body.location) : null,
+    workMode: parseWorkMode(body.workMode),
     startDate: String(body.startDate ?? ''),
     endDate: String(body.endDate ?? 'Present'),
     description: Array.isArray(body.description) ? JSON.stringify(body.description) : JSON.stringify([]),
@@ -17,7 +19,7 @@ function parseExperience(body: Record<string, unknown>) {
   };
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const session = await getSession();
   const showAll = !!session;
   const list = await prisma.experience.findMany({
@@ -30,6 +32,7 @@ export async function GET(request: NextRequest) {
       role: e.role,
       organization: e.organization,
       location: e.location,
+      workMode: e.workMode,
       startDate: e.startDate,
       endDate: e.endDate,
       description: JSON.parse(e.description || '[]') as string[],
@@ -53,6 +56,7 @@ export async function POST(request: NextRequest) {
     role: created.role,
     organization: created.organization,
     location: created.location,
+    workMode: created.workMode,
     startDate: created.startDate,
     endDate: created.endDate,
     description: JSON.parse(created.description || '[]'),

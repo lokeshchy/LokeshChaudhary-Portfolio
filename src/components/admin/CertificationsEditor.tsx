@@ -124,14 +124,10 @@ export function CertificationsEditor({ aboutPage }: { aboutPage: AboutPayload | 
     <div className="space-y-6 max-w-3xl">
       <p className="text-sm text-muted">
         These entries appear on the public{' '}
-        <Link href="/about" className="text-primary underline font-medium">
-          About
+        <Link href="/about#certifications" className="text-primary underline font-medium">
+          Resume
         </Link>{' '}
-        and{' '}
-        <Link href="/certifications" className="text-primary underline font-medium">
-          Certifications
-        </Link>{' '}
-        pages. Paste a normal Google Drive share link for <strong>Image URL</strong> (set access to
+        page. Paste a normal Google Drive share link for <strong>Image URL</strong> (set access to
         &quot;Anyone with the link&quot;).
       </p>
 

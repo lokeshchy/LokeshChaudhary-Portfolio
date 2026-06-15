@@ -1,4 +1,7 @@
-import { CertificationList } from '@/components/CertificationList';
+import { CertificationFlipCards } from '@/components/CertificationFlipCards';
+import { ExperienceCarousel } from '@/components/ExperienceCarousel';
+import { SkillsMarquee } from '@/components/SkillsMarquee';
+import { Reveal } from '@/components/motion/Reveal';
 import { getPageBySlug, getExperienceList, getProjectsList, getSettings, getSkillsList } from '@/lib/data';
 import { normalizeCertifications } from '@/lib/certifications';
 import { socialLinkHref } from '@/lib/social-links';
@@ -8,7 +11,6 @@ export const metadata = {
   description: 'About me',
 };
 
-/** Always read fresh CMS content from SQLite (avoid stale static shell). */
 export const dynamic = 'force-dynamic';
 
 export default async function AboutPage() {
@@ -50,29 +52,34 @@ export default async function AboutPage() {
   const totalExperience = experience.length;
   const totalProjects = projects.length;
   const totalCertifications = certifications.length;
+  const certificationsVisible = showCertifications && totalCertifications > 0;
   const social = settings?.socialLinks ?? {};
   const contactEntries = Object.entries(social).filter(([, value]) => value && String(value).trim());
 
   return (
-    <div className="max-w-frame mx-auto px-6 py-10">
-      <section className="rounded-card border border-primary/45 bg-gradient-to-br from-primary/35 via-surface to-secondary/28 shadow-card p-6 md:p-8 mb-8">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-primary">About</h1>
-            {bio && <p className="text-muted mt-3 max-w-3xl">{bio}</p>}
-          </div>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full md:w-auto md:min-w-[320px]">
-            <StatChip label="Experience" value={String(totalExperience)} />
-            <StatChip label="Skills" value={String(totalSkills)} />
-            <StatChip label="Certs" value={String(totalCertifications)} />
-          </div>
+    <div className="max-w-frame mx-auto px-4 md:px-6 pt-6 pb-12">
+      {/* Compact resume-style header */}
+      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-mono uppercase tracking-widest mb-1" style={{ color: 'rgba(45,212,191,0.55)' }}>
+            ~/about
+          </p>
+          <h1 className="text-3xl md:text-4xl font-bold text-gradient-primary leading-tight">About Me</h1>
+          {bio && <p className="text-muted mt-2.5 max-w-2xl text-base leading-relaxed">{bio}</p>}
         </div>
-      </section>
+        <div className="flex gap-2 shrink-0">
+          {showExperience && <StatChip label="Experience" value={String(totalExperience)} />}
+          {showSkills && <StatChip label="Skills" value={String(totalSkills)} />}
+          {certificationsVisible && <StatChip label="Certs" value={String(totalCertifications)} />}
+        </div>
+      </header>
 
-      <div className="grid gap-8 md:grid-cols-[280px,1fr] lg:grid-cols-[300px,1fr] xl:grid-cols-[320px,1fr]">
-        <aside className="space-y-6 md:sticky md:top-20 self-start">
+      {/* Resume two-column layout — sidebar is viewport-locked */}
+      <div className="grid gap-6 md:grid-cols-[256px,1fr] lg:grid-cols-[280px,1fr]">
+        {/* Sidebar — sticky at top, no independent scroll */}
+        <aside className="md:sticky md:top-20 self-start space-y-4">
           {contactEntries.length > 0 && (
-            <CvBlock title="Contact" toneClass="border-cyan-400/45 bg-gradient-to-br from-cyan-500/35 via-surface to-surface">
+            <CvBlock title="Contact">
               <div className="flex flex-wrap gap-2">
                 {contactEntries.map(([key, value]) => {
                   const href = socialLinkHref(key, String(value));
@@ -82,7 +89,11 @@ export default async function AboutPage() {
                       key={key}
                       href={href}
                       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-button border border-border bg-background text-muted hover:text-primary hover:border-primary/40 transition-colors"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200 text-muted hover:text-primary"
+                      style={{
+                        border: '1px solid rgba(255,255,255,0.07)',
+                        background: 'rgba(255,255,255,0.03)',
+                      }}
                       aria-label={key}
                       title={key}
                     >
@@ -95,152 +106,130 @@ export default async function AboutPage() {
           )}
 
           {showEducation && education.length > 0 && (
-            <CvBlock title="Education" toneClass="border-indigo-400/45 bg-gradient-to-br from-indigo-500/40 via-surface to-surface">
-              <ul className="space-y-3">
+            <CvBlock title="Education">
+              <ul className="space-y-2">
                 {education.map((e, i) => (
                   <li
                     key={i}
-                    className="rounded-button border border-indigo-300/45 bg-gradient-to-br from-indigo-500/35 via-background/70 to-surface/80 p-3"
+                    className="rounded-lg p-3"
+                    style={{
+                      border: '1px solid rgba(255,255,255,0.07)',
+                      background: 'rgba(11,19,34,0.5)',
+                    }}
                   >
-                    <p className="font-medium text-foreground">{e.name}</p>
-                    {e.year && <p className="text-xs text-muted mt-0.5">{e.year}</p>}
+                    <p className="font-medium text-[15px] text-foreground leading-snug">{e.name}</p>
+                    {e.year && (
+                      <p className="text-[13px] font-mono mt-1" style={{ color: 'rgba(45,212,191,0.6)' }}>
+                        {e.year}
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
             </CvBlock>
           )}
 
-          {showSkills && (
-            <CvBlock title="Core Skill" toneClass="border-fuchsia-400/45 bg-gradient-to-br from-fuchsia-500/40 via-surface to-surface">
-              <div className="space-y-4">
-                {orderedCategories.map((category) => {
-                  const list = byCategory[category] || [];
-                  if (!list.length) return null;
-                  return (
-                    <div key={category}>
-                      <h3 className="text-xs uppercase tracking-wide text-secondary mb-2">{category}</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {list.slice(0, 8).map((s) => (
-                          <span
-                            key={s.id}
-                            className={`inline-flex items-center gap-2 rounded-button border px-2.5 py-1.5 text-xs text-muted ${skillCardTone(s.name)}`}
-                          >
-                            <SkillIcon name={s.name} icon={s.icon} />
-                            {s.name}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CvBlock>
-          )}
-
-          {(showExperience || showCertifications) && (
-            <CvBlock title="Quick Summary" toneClass="border-secondary/50 bg-gradient-to-br from-secondary/40 via-surface to-surface">
-              <div className="space-y-3">
-                <div className="rounded-button border border-cyan-400/45 bg-gradient-to-br from-cyan-500/34 via-background/70 to-surface/80 p-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-foreground">Projects</p>
-                    <span className="text-sm font-semibold text-primary">{totalProjects}</span>
-                  </div>
-                  <p className="text-xs text-muted mt-1">Showcased builds and case studies</p>
-                </div>
+          {(showExperience || certificationsVisible) && (
+            <CvBlock title="Quick Summary" immediate>
+              <div className="space-y-2">
+                <SummaryRow
+                  label="Projects"
+                  value={totalProjects}
+                  desc="Showcased builds"
+                  borderColor="rgba(45,212,191,0.2)"
+                  bgColor="rgba(45,212,191,0.05)"
+                />
                 {showExperience && (
-                  <div className="rounded-button border border-secondary/45 bg-gradient-to-br from-secondary/34 via-background/70 to-surface/80 p-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-foreground">Experience</p>
-                      <span className="text-sm font-semibold text-primary">{totalExperience}</span>
-                    </div>
-                    <p className="text-xs text-muted mt-1">Roles and timeline entries</p>
-                  </div>
+                  <SummaryRow
+                    label="Experience"
+                    value={totalExperience}
+                    desc="Roles and timeline"
+                    borderColor="rgba(139,92,246,0.2)"
+                    bgColor="rgba(139,92,246,0.05)"
+                  />
                 )}
-                {showCertifications && (
-                  <div className="rounded-button border border-primary/45 bg-gradient-to-br from-primary/34 via-background/70 to-surface/80 p-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-foreground">Certifications</p>
-                      <span className="text-sm font-semibold text-primary">{totalCertifications}</span>
-                    </div>
-                    <p className="text-xs text-muted mt-1">Credentials and achievements</p>
-                  </div>
+                {certificationsVisible && (
+                  <SummaryRow
+                    label="Certifications"
+                    value={totalCertifications}
+                    desc="Credentials earned"
+                    borderColor="rgba(255,255,255,0.07)"
+                    bgColor="rgba(11,19,34,0.4)"
+                  />
                 )}
               </div>
             </CvBlock>
           )}
 
           {showCv && cvUrl && (
-            <CvBlock title="Resume" toneClass="border-accent/45 bg-gradient-to-br from-accent/35 via-surface to-surface">
-              <a href={cvUrl} target="_blank" rel="noopener noreferrer" className="btn-cta w-full">
-                Download Resume
-              </a>
-            </CvBlock>
+            <div className="hidden md:block">
+              <CvBlock title="Resume">
+                <a href={cvUrl} target="_blank" rel="noopener noreferrer" className="btn-cta w-full text-center">
+                  Download PDF
+                </a>
+              </CvBlock>
+            </div>
           )}
         </aside>
 
-        <main className="space-y-8">
+        {/* Main content — scrolls with page */}
+        <main className="space-y-6 min-w-0">
           {story && (
-            <CvBlock title="Professional Summary" toneClass="border-primary/50 bg-gradient-to-br from-primary/40 via-surface to-surface">
+            <CvBlock title="Professional Summary" id="summary">
               <div
-                className="prose prose-neutral max-w-none text-muted prose-p:leading-relaxed"
+                className="text-muted text-base leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: story.replace(/\n/g, '<br />') }}
               />
             </CvBlock>
           )}
 
           {showExperience && (
-            <CvBlock title="Experience" id="experience" toneClass="border-indigo-400/45 bg-gradient-to-br from-indigo-500/40 via-surface to-surface">
-              <ExperienceTimeline items={experience} />
-            </CvBlock>
-          )}
-
-          {showCertifications && certifications.length > 0 && (
-            <CvBlock title="Certifications" id="certifications" toneClass="border-primary/50 bg-gradient-to-br from-primary/40 via-surface to-surface">
-              <CertificationList
-                items={certifications}
-                showImages={false}
-                cardCtaHref="/certifications"
-                cardCtaLabel="Go to certifications"
-                compactSquare
-              />
+            <CvBlock title="Experience" id="experience">
+              <ExperienceCarousel items={experience} />
             </CvBlock>
           )}
 
           {showSkills && (
-            <CvBlock title="Skills Matrix" id="skills" toneClass="border-fuchsia-400/45 bg-gradient-to-br from-fuchsia-500/40 via-surface to-surface">
-              <div className="space-y-8">
-                {orderedCategories.map((category) => {
+            <CvBlock title="Skills" id="skills">
+              <div className="space-y-6">
+                {orderedCategories.map((category, i) => {
                   const list = byCategory[category] || [];
                   if (!list.length) return null;
                   return (
                     <section key={category}>
-                      <div className="mb-4">
-                        <h3 className="text-xl font-semibold text-primary/90">{category}</h3>
-                        <div className="mt-2 h-0.5 w-20 rounded-full bg-gradient-to-r from-primary via-fuchsia-400 to-cyan-400" />
+                      <div className="flex items-center gap-3 mb-3">
+                        <h3 className="tag-category">{category}</h3>
+                        <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                        <span className="text-[13px] font-mono" style={{ color: 'rgba(100,116,139,0.6)' }}>
+                          {list.length}
+                        </span>
                       </div>
-                      <div className="skills-matrix-grid grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                        {list.map((s, idx) => (
-                          <article
-                            key={s.id}
-                            className={`rounded-card border p-4 min-h-[104px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card ${skillCardTone(
-                              s.name,
-                            )}`}
-                            style={{ animationDelay: `${(idx % 10) * 90}ms` }}
-                          >
-                            <div className="flex flex-col items-center justify-center text-center gap-3 h-full">
-                              <SkillIcon name={s.name} icon={s.icon} />
-                              <span className="text-sm font-semibold text-muted leading-tight group-hover:text-foreground transition-colors">
-                                {s.name}
-                              </span>
-                            </div>
-                          </article>
-                        ))}
-                      </div>
+                      <SkillsMarquee
+                        skills={list}
+                        ariaLabel={`${category} skills`}
+                        reverse={i % 2 === 1}
+                      />
                     </section>
                   );
                 })}
               </div>
             </CvBlock>
+          )}
+
+          {certificationsVisible && (
+            <CvBlock title="Certifications" id="certifications">
+              <CertificationFlipCards items={certifications} />
+            </CvBlock>
+          )}
+
+          {showCv && cvUrl && (
+            <div className="md:hidden">
+              <CvBlock title="Resume">
+                <a href={cvUrl} target="_blank" rel="noopener noreferrer" className="btn-cta w-full text-center">
+                  Download PDF
+                </a>
+              </CvBlock>
+            </div>
           )}
         </main>
       </div>
@@ -252,26 +241,74 @@ function CvBlock({
   title,
   children,
   id,
-  toneClass = '',
+  immediate,
 }: {
   title: string;
   children: import('react').ReactNode;
   id?: string;
-  toneClass?: string;
+  immediate?: boolean;
 }) {
   return (
-    <section id={id} className={`rounded-card border border-border bg-surface/80 shadow-card p-5 md:p-6 scroll-mt-24 ${toneClass}`}>
-      <h2 className="text-xl font-semibold text-primary mb-4">{title}</h2>
+    <Reveal
+      as="section"
+      id={id}
+      immediate={immediate}
+      className="rounded-card p-5 md:p-6 scroll-mt-24"
+      style={{
+        background: 'rgba(11, 19, 34, 0.75)',
+        border: '1px solid rgba(255, 255, 255, 0.07)',
+        boxShadow: 'var(--shadow-card)',
+      }}
+    >
+      <h2 className="text-base font-semibold uppercase tracking-wide mb-4 flex items-center gap-2" style={{ color: 'rgba(45,212,191,0.85)' }}>
+        <span className="inline-block h-4 w-1 rounded-full" style={{ background: 'var(--color-primary)' }} aria-hidden />
+        {title}
+      </h2>
       {children}
-    </section>
+    </Reveal>
   );
 }
 
 function StatChip({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-button border border-border bg-background/60 px-3 py-2 text-center">
-      <p className="text-lg font-semibold text-primary leading-none">{value}</p>
-      <p className="text-[11px] uppercase tracking-wide text-muted mt-1">{label}</p>
+    <div
+      className="rounded-lg px-4 py-3 text-center"
+      style={{
+        border: '1px solid rgba(255,255,255,0.07)',
+        background: 'rgba(11,19,34,0.5)',
+      }}
+    >
+      <p className="text-2xl font-bold leading-none text-gradient-primary">{value}</p>
+      <p className="text-xs uppercase tracking-wide mt-1.5" style={{ color: '#64748b' }}>
+        {label}
+      </p>
+    </div>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  desc,
+  borderColor,
+  bgColor,
+}: {
+  label: string;
+  value: number;
+  desc: string;
+  borderColor: string;
+  bgColor: string;
+}) {
+  return (
+    <div
+      className="rounded-lg p-3 flex items-center justify-between"
+      style={{ border: `1px solid ${borderColor}`, background: bgColor }}
+    >
+      <div>
+        <p className="text-[15px] font-medium text-foreground">{label}</p>
+        <p className="text-[13px] text-muted mt-0.5">{desc}</p>
+      </div>
+      <span className="text-2xl font-bold font-mono text-gradient-primary">{value}</span>
     </div>
   );
 }
@@ -322,30 +359,25 @@ function normalizeSocialKey(key: string): string {
   return k;
 }
 
-function SkillIcon({ name, icon }: { name: string; icon?: string | null }) {
+function SkillIcon({ name, icon, size = 'md' }: { name: string; icon?: string | null; size?: 'sm' | 'md' }) {
   const trimmed = icon?.trim();
   const logoFromName = getSkillLogoUrl(name);
   const logoFromIcon = trimmed ? getSkillLogoUrl(trimmed) : null;
   const logoFromMap = logoFromName || logoFromIcon;
   const directUrl = trimmed && /^https?:\/\//i.test(trimmed) ? toDisplayImageSrc(trimmed) : null;
+  const imgClass = size === 'sm' ? 'w-3.5 h-3.5 object-contain' : 'w-5 h-5 object-contain';
 
   if (directUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={directUrl}
-        alt=""
-        className="w-6 h-6 object-contain"
-        loading="lazy"
-        referrerPolicy="no-referrer"
-      />
+      <img src={directUrl} alt="" className={imgClass} loading="lazy" referrerPolicy="no-referrer" />
     );
   }
 
   if (logoFromMap) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={logoFromMap} alt="" className="w-5 h-5 object-contain" loading="lazy" />
+      <img src={logoFromMap} alt="" className={imgClass} loading="lazy" />
     );
   }
 
@@ -363,19 +395,6 @@ function SkillIcon({ name, icon }: { name: string; icon?: string | null }) {
   return <span className="text-xs font-bold text-primary">{initials || '?'}</span>;
 }
 
-function skillCardTone(name: string): string {
-  const tones = [
-    'border-primary/35 bg-gradient-to-br from-primary/20 via-surface to-surface',
-    'border-secondary/35 bg-gradient-to-br from-secondary/20 via-surface to-surface',
-    'border-accent/35 bg-gradient-to-br from-accent/20 via-surface to-surface',
-    'border-indigo-400/35 bg-gradient-to-br from-indigo-500/20 via-surface to-surface',
-    'border-cyan-400/35 bg-gradient-to-br from-cyan-500/20 via-surface to-surface',
-    'border-fuchsia-400/35 bg-gradient-to-br from-fuchsia-500/20 via-surface to-surface',
-  ];
-  const hash = Array.from(name).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return tones[hash % tones.length];
-}
-
 function normalizeSkillKey(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
@@ -384,62 +403,20 @@ function normalizeResumeSkillCategory(name: string, currentCategory?: string | n
   const key = normalizeSkillKey(name);
 
   const languageKeys = new Set([
-    'typescript',
-    'javascript',
-    'c',
-    'cplusplus',
-    'cpp',
-    'python',
-    'html',
-    'html5',
-    'css',
-    'css3',
-    'nodejs',
-    'node',
-    'postgresql',
+    'typescript', 'javascript', 'c', 'cplusplus', 'cpp', 'python',
+    'html', 'html5', 'css', 'css3', 'nodejs', 'node', 'postgresql',
   ]);
   const frameworkToolsKeys = new Set([
-    'react',
-    'reactjs',
-    'nextjs',
-    'tailwindcss',
-    'tailwind',
-    'express',
-    'expressjs',
-    'git',
-    'github',
-    'figma',
-    'mongodb',
-    'postman',
-    'restapi',
-    'restapis',
-    'langchain',
-    'mcp',
-    'webgis',
-    'cloudflare',
-    'cloudflarecdn',
-    'kafka',
-    'redis',
-    'docker',
+    'react', 'reactjs', 'nextjs', 'tailwindcss', 'tailwind', 'express', 'expressjs',
+    'git', 'github', 'figma', 'mongodb', 'postman', 'restapi', 'restapis',
+    'langchain', 'mcp', 'webgis', 'cloudflare', 'cloudflarecdn', 'kafka', 'redis', 'docker',
   ]);
   const gisMlKeys = new Set([
-    'arcgis',
-    'qgis',
-    'webgis',
-    'remotesensing',
-    'machinelearning',
-    'sentinel2',
-    'leaflet',
-    'ml',
-    'gis',
+    'arcgis', 'qgis', 'webgis', 'remotesensing', 'machinelearning',
+    'sentinel2', 'leaflet', 'ml', 'gis',
   ]);
   const softSkillKeys = new Set([
-    'teamwork',
-    'problemsolving',
-    'decisionmaking',
-    'communication',
-    'leadership',
-    'collaboration',
+    'teamwork', 'problemsolving', 'decisionmaking', 'communication', 'leadership', 'collaboration',
   ]);
 
   if (languageKeys.has(key)) return 'Language';
@@ -531,44 +508,3 @@ function toDisplayImageSrc(url: string): string {
   return url;
 }
 
-function ExperienceTimeline({
-  items,
-}: {
-  items: Array<{
-    id: string;
-    role: string;
-    organization: string;
-    location?: string | null;
-    startDate: string;
-    endDate: string;
-    description: string[];
-    type: string;
-  }>;
-}) {
-  return (
-    <div className="relative pl-6 border-l-2 border-border space-y-8">
-      {items.map((e) => (
-        <div key={e.id} className="relative">
-          <span className="absolute -left-[29px] top-1 w-4 h-4 rounded-full bg-primary border-2 border-background" />
-          <div className={`rounded-card shadow-soft p-5 border ${skillCardTone(`${e.role}-${e.organization}`)}`}>
-            <div className="flex flex-wrap items-baseline gap-2">
-              <h3 className="font-semibold text-primary">{e.role}</h3>
-              <span className="text-sm text-muted">{e.organization}</span>
-              {e.location && <span className="text-sm text-muted">· {e.location}</span>}
-            </div>
-            <p className="text-sm text-muted mt-1">
-              {e.startDate} – {e.endDate} · {e.type}
-            </p>
-            {e.description.length > 0 && (
-              <ul className="mt-3 list-disc list-inside text-muted text-sm space-y-1">
-                {e.description.map((d, i) => (
-                  <li key={i}>{d}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}

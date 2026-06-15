@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { MarkdownBody } from '@/components/MarkdownBody';
 import { getPageBySlug } from '@/lib/data';
+import { Reveal, RevealItem } from '@/components/motion/Reveal';
 
 const SYSTEM_SLUGS = [
   'home',
@@ -8,7 +9,6 @@ const SYSTEM_SLUGS = [
   'projects',
   'blog',
   'experience',
-  'contact',
   'certifications',
   'certification',
 ];
@@ -38,14 +38,16 @@ export default async function CustomPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="max-w-content mx-auto px-6 py-12">
-      <h1 className="text-3xl font-bold text-primary mb-8">{page.title}</h1>
-      <MarkdownBody className="prose prose-neutral max-w-2xl prose-headings:text-primary prose-p:text-muted prose-a:text-primary">
-        {body}
-      </MarkdownBody>
+      <Reveal>
+        <h1 className="text-3xl font-bold text-primary mb-8">{page.title}</h1>
+        <MarkdownBody className="prose prose-neutral max-w-2xl prose-headings:text-primary prose-p:text-muted prose-a:text-primary">
+          {body}
+        </MarkdownBody>
+      </Reveal>
       {media.length > 0 && (
-        <div className="mt-10 space-y-8">
+        <Reveal stagger={0.1} className="mt-10 space-y-8">
           {media.map((item, i) => (
-            <div key={i}>
+            <RevealItem key={i}>
               {item.type === 'image' && (
                 <>
                   <div className="relative aspect-video max-w-3xl rounded-card overflow-hidden bg-surface border border-border">
@@ -63,9 +65,9 @@ export default async function CustomPage({ params }: { params: Promise<{ slug: s
                   {item.caption && <p className="text-sm text-muted mt-2">{item.caption}</p>}
                 </>
               )}
-            </div>
+            </RevealItem>
           ))}
-        </div>
+        </Reveal>
       )}
     </div>
   );

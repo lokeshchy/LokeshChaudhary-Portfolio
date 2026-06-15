@@ -43,12 +43,14 @@ export type CertificationItem = string | CertificationEntry;
 
 // Experience
 export type ExperienceType = 'Work' | 'Research' | 'Internship' | 'Volunteer';
+export type WorkMode = 'Onsite' | 'Hybrid' | 'Remote';
 
 export interface ExperienceEntry {
   id: string;
   role: string;
   organization: string;
   location?: string;
+  workMode?: WorkMode | string | null;
   startDate: string;
   endDate: string;
   description: string[];

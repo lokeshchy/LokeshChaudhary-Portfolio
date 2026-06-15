@@ -1,4 +1,4 @@
-/** Build href for footer / contact from settings socialLinks entries. */
+/** Build href for footer and about sidebar from settings socialLinks entries. */
 export function socialLinkHref(key: string, value: string): string {
   const v = value.trim();
   if (!v) return '#';

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAuth } from '@/lib/api-auth';
+import { parseWorkMode } from '@/lib/experience-constants';
 
 function parseExperience(body: Record<string, unknown>) {
   return {
     role: body.role !== undefined ? String(body.role) : undefined,
     organization: body.organization !== undefined ? String(body.organization) : undefined,
     location: body.location !== undefined ? (body.location ? String(body.location) : null) : undefined,
+    workMode: body.workMode !== undefined ? parseWorkMode(body.workMode) : undefined,
     startDate: body.startDate !== undefined ? String(body.startDate) : undefined,
     endDate: body.endDate !== undefined ? String(body.endDate) : undefined,
     description: Array.isArray(body.description) ? JSON.stringify(body.description) : undefined,
@@ -28,6 +30,7 @@ export async function GET(
     role: e.role,
     organization: e.organization,
     location: e.location,
+    workMode: e.workMode,
     startDate: e.startDate,
     endDate: e.endDate,
     description: JSON.parse(e.description || '[]'),
@@ -57,6 +60,7 @@ export async function PUT(
     role: updated.role,
     organization: updated.organization,
     location: updated.location,
+    workMode: updated.workMode,
     startDate: updated.startDate,
     endDate: updated.endDate,
     description: JSON.parse(updated.description || '[]'),

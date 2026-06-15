@@ -12,7 +12,6 @@ const SYSTEM_SLUGS = [
   'projects',
   'blog',
   'experience',
-  'contact',
   'certifications',
   'certification',
 ];
@@ -280,7 +279,7 @@ function AdminPagesPageContent() {
             <div className="bg-surface rounded-card shadow-card p-6 border border-border">
               <h2 className="text-lg font-medium text-primary mb-4">Home sections (add, remove, reorder)</h2>
               <ul className="space-y-2 mb-4">
-                {[...sections].sort((a, b) => a.order - b.order).map((s, idx) => (
+                {[...sections].sort((a, b) => a.order - b.order).map((s) => (
                   <li key={s.id} className="flex items-center gap-3 flex-wrap">
                     <input
                       type="checkbox"
@@ -378,7 +377,7 @@ function AdminPagesPageContent() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-muted mb-1">Education (one per line: "Degree, Institution (Year)")</label>
+                  <label className="block text-sm font-medium text-muted mb-1">Education (one per line: &quot;Degree, Institution (Year)&quot;)</label>
                   <textarea
                     value={((page.content?.education as Array<{ name: string; year?: string }>) || []).map((e) => (e.year ? `${e.name} (${e.year})` : e.name)).join('\n')}
                     onChange={(e) => {

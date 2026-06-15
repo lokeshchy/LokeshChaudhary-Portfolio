@@ -26,10 +26,10 @@ const defaultSettings = {
 const homePageContent = {
   sections: [
     { id: 'hero', type: 'hero', enabled: true, order: 0, data: {} },
-    { id: 'featured', type: 'featured-projects', enabled: true, order: 1, data: {} },
-    { id: 'about-preview', type: 'about-preview', enabled: true, order: 2, data: {} },
+    { id: 'about-preview', type: 'about-preview', enabled: true, order: 1, data: {} },
+    { id: 'exp-preview', type: 'experience-preview', enabled: true, order: 2, data: {} },
     { id: 'skills', type: 'skills-snapshot', enabled: true, order: 3, data: {} },
-    { id: 'exp-preview', type: 'experience-preview', enabled: true, order: 4, data: {} },
+    { id: 'featured', type: 'featured-projects', enabled: true, order: 4, data: {} },
     { id: 'blogs', type: 'latest-blogs', enabled: true, order: 5, data: {} },
     { id: 'cta', type: 'cta', enabled: true, order: 6, data: {} },
   ],
@@ -130,18 +130,6 @@ async function main() {
     { slug: 'projects', title: 'Projects', content: JSON.stringify({ sections: [] }), seoTitle: 'Projects | Lokesh Chaudhary', seoDesc: 'Selected software and GIS projects.' },
     { slug: 'blog', title: 'Blog', content: JSON.stringify({ sections: [] }), seoTitle: 'Blog | Lokesh Chaudhary', seoDesc: 'Articles on software, GIS, and learning.' },
     { slug: 'experience', title: 'Experience', content: JSON.stringify({ sections: [] }), seoTitle: 'Experience | Lokesh Chaudhary', seoDesc: 'Professional and fellowship experience.' },
-    {
-      slug: 'contact',
-      title: 'Contact',
-      content: JSON.stringify({
-        sections: [],
-        formTitle: 'Get in Touch',
-        formDesc:
-          'Open to collaboration on backend systems, full stack products, GIS and remote sensing work, and research-oriented builds.',
-      }),
-      seoTitle: 'Contact | Lokesh Chaudhary',
-      seoDesc: 'Contact Lokesh Chaudhary by email, phone, or social links.',
-    },
   ];
 
   for (const p of pages) {
@@ -164,6 +152,7 @@ async function main() {
         role: 'Jr. Software Engineer',
         organization: 'T.E.J. Center Pvt. Ltd.',
         location: 'Nepal',
+        workMode: 'Hybrid',
         startDate: '2026-01',
         endDate: 'Present',
         description: JSON.stringify([
@@ -179,6 +168,7 @@ async function main() {
         role: 'TEJ Fellow – 2025 Cohort',
         organization: 'TEJ Fellowship',
         location: 'Kupandol, Lalitpur',
+        workMode: 'Onsite',
         startDate: '2025-07',
         endDate: '2025-12',
         description: JSON.stringify([
@@ -192,6 +182,7 @@ async function main() {
         role: 'Campus Director',
         organization: 'Hult Prize (IOE), Paschimanchal Campus (Certificate)',
         location: 'Pokhara',
+        workMode: 'Onsite',
         startDate: '2022-01',
         endDate: '2023-12',
         description: JSON.stringify([

@@ -25,6 +25,7 @@ const config: Config = {
         muted: 'var(--color-muted)',
         background: 'var(--color-background)',
         surface: 'var(--color-surface)',
+        'surface-raised': 'var(--color-surface-raised)',
         border: 'var(--color-border)',
       },
       backgroundImage: {

@@ -4,7 +4,11 @@ import { useEffect, useState } from 'react';
 import { socialLinkHref } from '@/lib/social-links';
 
 export function PublicFooter() {
-  const [settings, setSettings] = useState<{ footerText?: string; siteName?: string; socialLinks?: Record<string, string> }>({});
+  const [settings, setSettings] = useState<{
+    footerText?: string;
+    siteName?: string;
+    socialLinks?: Record<string, string>;
+  }>({});
 
   useEffect(() => {
     fetch('/api/settings')
@@ -18,12 +22,29 @@ export function PublicFooter() {
     : [];
 
   return (
-    <footer className="border-t border-border bg-surface mt-auto">
-      <div className="max-w-content mx-auto px-6 py-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted">{settings.footerText || `© ${new Date().getFullYear()} ${settings.siteName || 'Portfolio'}`}</p>
+    <footer
+      className="mt-auto"
+      style={{
+        borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+        background: 'rgba(7, 12, 24, 0.6)',
+      }}
+    >
+      <div className="w-full px-6 md:px-10 lg:px-16 xl:px-24 py-3.5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+          {/* Left: copy + tagline */}
+          <div className="text-center sm:text-left">
+            <p className="text-xs font-mono" style={{ color: 'rgba(100, 116, 139, 0.8)' }}>
+              {settings.footerText ||
+                `© ${new Date().getFullYear()} ${settings.siteName || 'Portfolio'}`}
+            </p>
+            <p className="text-[10px] font-mono mt-0.5" style={{ color: 'rgba(45, 212, 191, 0.3)' }}>
+              Geomatics × Software Engineering
+            </p>
+          </div>
+
+          {/* Right: social links */}
           {links.length > 0 && (
-            <div className="flex gap-4">
+            <div className="flex gap-2">
               {links.map(([key, url]) => {
                 const href = socialLinkHref(key, url);
                 const external = key !== 'email' && key !== 'phone' && key !== 'tel';
@@ -32,7 +53,24 @@ export function PublicFooter() {
                     key={key}
                     href={href}
                     {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-button border border-border bg-background text-muted hover:text-primary hover:border-primary/40 transition-colors"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200"
+                    style={{
+                      border: '1px solid rgba(255, 255, 255, 0.07)',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      color: '#64748b',
+                    }}
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.borderColor = 'rgba(45, 212, 191, 0.3)';
+                      el.style.background = 'rgba(45, 212, 191, 0.06)';
+                      el.style.color = '#2dd4bf';
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.borderColor = 'rgba(255, 255, 255, 0.07)';
+                      el.style.background = 'rgba(255, 255, 255, 0.03)';
+                      el.style.color = '#64748b';
+                    }}
                     aria-label={key}
                     title={key}
                   >
@@ -50,6 +88,7 @@ export function PublicFooter() {
 
 function SocialIcon({ keyName }: { keyName: string }) {
   const k = normalizeSocialKey(keyName);
+
   const logos: Record<string, string> = {
     github: 'https://cdn.simpleicons.org/github/FFFFFF',
     facebook: 'https://cdn.simpleicons.org/facebook/1877F2',
@@ -57,6 +96,7 @@ function SocialIcon({ keyName }: { keyName: string }) {
     twitter: 'https://cdn.simpleicons.org/x/FFFFFF',
     email: 'https://cdn.simpleicons.org/gmail/EA4335',
   };
+
   if (k === 'linkedin') {
     return (
       <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4">
@@ -67,6 +107,7 @@ function SocialIcon({ keyName }: { keyName: string }) {
       </svg>
     );
   }
+
   const src = logos[k];
   if (src) {
     return (
@@ -74,6 +115,7 @@ function SocialIcon({ keyName }: { keyName: string }) {
       <img src={src} alt="" className="h-4 w-4 object-contain" loading="lazy" referrerPolicy="no-referrer" />
     );
   }
+
   if (k === 'phone' || k === 'tel') {
     return (
       <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4">
@@ -84,6 +126,7 @@ function SocialIcon({ keyName }: { keyName: string }) {
       </svg>
     );
   }
+
   return <span className="text-xs font-semibold">{k.slice(0, 2).toUpperCase()}</span>;
 }
 

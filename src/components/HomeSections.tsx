@@ -1,11 +1,80 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { MarkdownBody } from '@/components/MarkdownBody';
-import { HeroRotatingSubtitle } from './HeroRotatingSubtitle';
-import { getExperienceList, getProjectsList, getBlogList, getSkillsList } from '@/lib/data';
+import { SkillsMarquee } from './SkillsMarquee';
+import { HeroIntro } from './HeroIntro';
+import { HeroPortrait3D } from './HeroPortrait3D';
+import { Reveal, RevealItem } from './motion/Reveal';
+import { Tilt3D } from './motion/Tilt3D';
+import { socialLinkHref, socialLinkLabel } from '@/lib/social-links';
+import {
+  getExperienceList,
+  getProjectsList,
+  getBlogList,
+  getSkillsList,
+  getPageBySlug,
+  getSettings,
+} from '@/lib/data';
 
 type Section = { id: string; type: string; enabled: boolean; order: number; data?: Record<string, unknown> };
 type Hero = { title: string; subtitles: string[]; ctaText: string; ctaLink: string };
+
+/** Preferred landing-page flow: intro → experience → skills → work → writing → CTA */
+const HOME_SECTION_RANK: Record<string, number> = {
+  hero: 0,
+  'about-preview': 1,
+  'experience-preview': 2,
+  'skills-snapshot': 3,
+  'featured-projects': 4,
+  'latest-blogs': 5,
+  cta: 6,
+};
+
+function homeSectionRank(section: Section): number {
+  if (section.type in HOME_SECTION_RANK) return HOME_SECTION_RANK[section.type];
+  return 100 + section.order;
+}
+
+/** Editorial section heading: index number, overline, title, optional link. */
+function SectionHeader({
+  index,
+  overline,
+  title,
+  href,
+  hrefLabel,
+}: {
+  index?: string;
+  overline: string;
+  title: string;
+  href?: string;
+  hrefLabel?: string;
+}) {
+  return (
+    <div className="flex items-end justify-between gap-4 mb-10">
+      <div className="flex items-start gap-4">
+        {index && (
+          <span className="font-mono text-sm pt-1 select-none" style={{ color: 'rgba(45,212,191,0.35)' }}>
+            {index}
+          </span>
+        )}
+        <div>
+          <span className="section-overline mb-2">{overline}</span>
+          <h2 className="text-2xl md:text-3xl font-bold">
+            <span className="text-gradient-primary">{title}</span>
+          </h2>
+        </div>
+      </div>
+      {href && (
+        <Link
+          href={href}
+          className="group hidden sm:flex items-center gap-1.5 text-xs text-muted hover:text-[#2dd4bf] transition-colors font-mono shrink-0"
+        >
+          {hrefLabel}
+          <span className="transform group-hover:translate-x-1 transition-transform inline-block">→</span>
+        </Link>
+      )}
+    </div>
+  );
+}
 
 export async function HomeSections({
   sections,
@@ -16,461 +85,586 @@ export async function HomeSections({
 }) {
   const enabled = (sections || [])
     .filter((s) => s.enabled)
-    .sort((a, b) => a.order - b.order);
+    .sort((a, b) => homeSectionRank(a) - homeSectionRank(b) || a.order - b.order);
 
-  const [experience, projects, blogs, skills] = await Promise.all([
+  const [experience, projects, blogs, skills, aboutPage, settings] = await Promise.all([
     getExperienceList(),
     getProjectsList(),
     getBlogList(true),
     getSkillsList(),
+    getPageBySlug('about'),
+    getSettings(),
   ]);
 
-  const featuredProjects = projects.filter((p) => p.featured).slice(0, 3);
-  const latestBlogs = blogs.slice(0, 3);
+  // Spotlight + a balanced row of 3. Fill from the most recent non-featured
+  // projects if there aren't enough featured ones to complete the row.
+  const showcaseProjects = [
+    ...projects.filter((p) => p.featured),
+    ...projects.filter((p) => !p.featured),
+  ].slice(0, 4);
+  const latestBlogs = blogs.slice(0, 4);
+
+  const aboutContent = aboutPage?.content as Record<string, unknown> | undefined;
+  const bio = (aboutContent?.bio as string) || '';
+  const social = (settings?.socialLinks ?? {}) as Record<string, string>;
+  const contactEntries = Object.entries(social).filter(([, v]) => v && String(v).trim());
+
+  // Editorial index numbers for the major content sections (hero excluded).
+  const numberFor: Record<string, string> = {};
+  let counter = 0;
+  enabled.forEach((s) => {
+    if (s.type !== 'hero') {
+      counter += 1;
+      numberFor[s.id] = String(counter).padStart(2, '0');
+    }
+  });
 
   return (
-    <div className="space-y-20">
-      {enabled.map((sec) => {
-        if (sec.type === 'hero') {
-          return (
-            <section key={sec.id} className="hero-backdrop-glow py-16 md:py-24">
-              <div className="grid gap-8 md:grid-cols-[1fr,320px] lg:grid-cols-[1fr,360px] items-center">
-                <div>
-                  <h1 className="text-4xl md:text-5xl font-bold text-gradient-primary mb-3 leading-tight">
-                    {hero.title}
-                  </h1>
-                  <div className="text-xl md:text-2xl text-secondary font-medium min-h-[2rem] mb-6">
-                    <HeroRotatingSubtitle subtitles={hero.subtitles || []} />
-                  </div>
-                  <Link href={hero.ctaLink || '/projects'} className="btn-cta">
-                    {hero.ctaText || 'View Work'}
-                  </Link>
-                </div>
-                {/* <div className="justify-self-center md:justify-self-end w-full max-w-[360px]">
-                  <div className="translate-x-[20px] -translate-y-[50px] relative mx-auto h-72 w-72 md:h-80 md:w-80">
-                    <div className="absolute inset-0 translate-x-4 translate-y-4 rounded-full bg-gradient-to-br from-secondary/35 via-primary/20 to-cyan-400/30 blur-[2px]" />
-                    <div className="relative h-full w-full overflow-visible rounded-full border-2 border-primary/70 shadow-card bg-background/30">
-                      <Image
-                        src="/hero-photo-3d.png"
-                        alt="Lokesh Chaudhary portrait"
-                        fill
-                        className="scale-[1.28] -translate-y-3 object-cover object-center mix-blend-multiply"
-                        sizes="(max-width: 768px) 100vw, 360px"
-                        priority
-                      />
-                    </div>
-                  </div>
-                </div> */}
-                <div className="justify-self-center md:justify-self-end w-full max-w-[420px]">
-                  <div className="relative mx-auto h-72 w-72 md:h-80 md:w-[380px] group overflow-visible">
-                    {/* Elongated blue gradient behind portrait */}
-                    <div
-                      className="absolute inset-y-8 left-8 right-0 z-0 rounded-[999px] bg-gradient-to-r from-primary/45 via-secondary/35 to-cyan-400/30 blur-lg"
-                      aria-hidden
-                    />
+    <>
+      <div className="space-y-28">
+        {enabled.map((sec) => {
+          /* ── Hero ──────────────────────────────────────────── */
+          if (sec.type === 'hero') {
+            return (
+              <section
+                key={sec.id}
+                className="hero-backdrop-glow relative overflow-hidden flex flex-col justify-center min-h-[calc(100vh-4rem)] py-12 w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] px-6 md:px-10 lg:px-16 xl:px-24 -mt-12"
+              >
+                <div className="hero-orb hero-orb-1" aria-hidden />
+                <div className="hero-orb hero-orb-2" aria-hidden />
 
-                    <Image
-                      src="/hero-photo-3d.png"
-                      alt="Lokesh Chaudhary portrait"
-                      fill
-                      priority
-                      sizes="(max-width: 768px) 100vw, 420px"
-                      className="
-          relative z-10 object-contain object-center
-          scale-[1.2] md:scale-[1.32]
-          -translate-y-4
-          transition-all duration-500 ease-out
-          group-hover:scale-[1.38] group-hover:-translate-y-6
-          drop-shadow-[0_25px_50px_rgba(0,0,0,0.6)]
-        "
-                    />
-                  </div>
+                <div className="grid gap-14 md:grid-cols-[1fr_420px] lg:grid-cols-[1fr_520px] items-center relative z-10 flex-1">
+                  <HeroIntro
+                    title={hero.title}
+                    subtitles={hero.subtitles || []}
+                    ctaText={hero.ctaText}
+                    ctaLink={hero.ctaLink}
+                    stats={[
+                      { value: projects.length, label: 'Projects' },
+                      { value: experience.length, label: 'Roles' },
+                      { value: skills.length, label: 'Skills' },
+                    ]}
+                  />
+                  <HeroPortrait3D src="/hero-photo-3d.png" alt="Lokesh Chaudhary portrait" />
                 </div>
-              </div>
-            </section>
-          );
-        }
-        if (sec.type === 'featured-projects') {
-          return (
-            <section key={sec.id}>
-              <div className="section-divider-glow mb-12" aria-hidden />
-              <h2 className="text-2xl font-semibold text-primary mb-6">Featured Projects</h2>
-              <div className="grid gap-4 md:grid-cols-3">
-                {featuredProjects.map((p) => (
-                  <article key={p.id} className={`card-project p-6 ${flashCardTone(p.title)}`}>
-                    <h3 className="font-semibold text-primary">{p.title}</h3>
-                    <p className="text-sm text-muted mt-1 line-clamp-2">{p.overview}</p>
-                    {p.techStack && p.techStack.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {p.techStack.slice(0, 4).map((t) => (
-                          <span
-                            key={t}
-                            className="text-[11px] px-2 py-0.5 rounded-button border border-secondary/35 bg-secondary/10 text-secondary"
+
+                <div className="scroll-cue mt-8 flex justify-center" aria-hidden>
+                  <span className="scroll-cue-mouse">
+                    <span className="scroll-cue-dot" />
+                  </span>
+                </div>
+              </section>
+            );
+          }
+
+          /* ── Featured Projects — spotlight + grid ──────────── */
+          if (sec.type === 'featured-projects') {
+            const [spotlight, ...rest] = showcaseProjects;
+            return (
+              <Reveal as="section" key={sec.id}>
+                <div className="section-divider-glow mb-14" aria-hidden />
+                <SectionHeader
+                  index={numberFor[sec.id]}
+                  overline="Selected Work"
+                  title="Featured Projects"
+                  href="/projects"
+                  hrefLabel="view all"
+                />
+
+                {!spotlight ? (
+                  <p className="text-muted text-sm">No featured projects yet.</p>
+                ) : (
+                  <div className="space-y-5">
+                    {/* Spotlight */}
+                    <Tilt3D max={5} glare={false} scale={1.005}>
+                      <article
+                        className="card-project card-gradient-border relative overflow-hidden grid md:grid-cols-[1.4fr_1fr] gap-6 p-7 md:p-9 group"
+                        style={{ position: 'relative' }}
+                      >
+                        <span
+                          className="absolute -top-6 -right-2 text-[7rem] font-black leading-none select-none pointer-events-none"
+                          style={{ color: 'rgba(255,255,255,0.025)' }}
+                        >
+                          01
+                        </span>
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="tag-category">Spotlight</span>
+                            {spotlight.deployed && (
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full border border-[rgba(45,212,191,0.25)] text-[#5eead4] bg-[rgba(45,212,191,0.06)]">
+                                ● Live
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="text-2xl md:text-3xl font-bold text-foreground group-hover:text-[#2dd4bf] transition-colors leading-tight mb-3">
+                            {spotlight.title}
+                          </h3>
+                          <p className="text-sm text-muted leading-relaxed line-clamp-4 mb-5 max-w-xl">
+                            {spotlight.overview}
+                          </p>
+                          {spotlight.techStack?.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mb-6">
+                              {spotlight.techStack.slice(0, 7).map((t) => (
+                                <span key={t} className="tag-tech">{t}</span>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-4">
+                            {spotlight.deployed && spotlight.demoUrl && (
+                              <a
+                                href={spotlight.demoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-[#2dd4bf] hover:text-[#5eead4] transition-colors font-medium"
+                              >
+                                ↗ Live Demo
+                              </a>
+                            )}
+                            {spotlight.viewCode && spotlight.codeUrl && (
+                              <a
+                                href={spotlight.codeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-muted hover:text-foreground transition-colors"
+                              >
+                                Code
+                              </a>
+                            )}
+                            <Link
+                              href={`/projects/${spotlight.slug}`}
+                              className="ml-auto text-sm text-muted hover:text-[#2dd4bf] transition-colors flex items-center gap-1 group/link"
+                            >
+                              Case study
+                              <span className="transform group-hover/link:translate-x-0.5 transition-transform inline-block">→</span>
+                            </Link>
+                          </div>
+                        </div>
+
+                        {/* Decorative meta panel */}
+                        <div
+                          className="relative z-10 hidden md:flex flex-col justify-center rounded-2xl p-6"
+                          style={{
+                            background:
+                              'radial-gradient(ellipse 100% 100% at 100% 0%, rgba(45,212,191,0.08), transparent 60%), rgba(7,12,24,0.4)',
+                            border: '1px solid rgba(255,255,255,0.06)',
+                          }}
+                        >
+                          <p className="text-xs font-mono uppercase tracking-widest mb-4" style={{ color: 'rgba(45,212,191,0.5)' }}>
+                            ~/featured
+                          </p>
+                          <p className="text-4xl font-bold text-gradient-primary tabular-nums">
+                            {spotlight.techStack?.length ?? 0}
+                          </p>
+                          <p className="text-[11px] text-muted font-mono uppercase tracking-wider mb-5">technologies</p>
+                          <div className="h-px w-full mb-5" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                          <p className="text-sm text-muted leading-relaxed">
+                            A flagship build showcasing end-to-end product thinking.
+                          </p>
+                        </div>
+                      </article>
+                    </Tilt3D>
+
+                    {/* Remaining featured */}
+                    {rest.length > 0 && (
+                      <Reveal stagger={0.1} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        {rest.map((p, idx) => (
+                          <RevealItem key={p.id} className="h-full">
+                            <Tilt3D className="h-full" max={9} glare={false} scale={1.025}>
+                              <article className="card-project card-gradient-border p-6 flex flex-col group h-full" style={{ position: 'relative' }}>
+                                <span
+                                  className="absolute top-4 right-5 text-[3rem] font-black leading-none select-none pointer-events-none"
+                                  style={{ color: 'rgba(255,255,255,0.028)' }}
+                                >
+                                  {String(idx + 2).padStart(2, '0')}
+                                </span>
+                                <div className="flex items-start justify-between gap-2 mb-3">
+                                  <h3 className="font-semibold text-foreground text-sm group-hover:text-[#2dd4bf] transition-colors leading-snug">
+                                    {p.title}
+                                  </h3>
+                                </div>
+                                <p className="text-xs text-muted leading-relaxed line-clamp-3 mb-5 flex-1">{p.overview}</p>
+                                {p.techStack?.length > 0 && (
+                                  <div className="flex flex-wrap gap-1.5 mb-5">
+                                    {p.techStack.slice(0, 4).map((t) => (
+                                      <span key={t} className="tag-tech">{t}</span>
+                                    ))}
+                                    {p.techStack.length > 4 && (
+                                      <span className="tag-tech opacity-50">+{p.techStack.length - 4}</span>
+                                    )}
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
+                                  {p.deployed && p.demoUrl && (
+                                    <a href={p.demoUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[#2dd4bf] hover:text-[#5eead4] transition-colors font-medium">
+                                      ↗ Live
+                                    </a>
+                                  )}
+                                  {p.viewCode && p.codeUrl && (
+                                    <a href={p.codeUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted hover:text-foreground transition-colors">
+                                      Code
+                                    </a>
+                                  )}
+                                  <Link href={`/projects/${p.slug}`} className="ml-auto text-xs text-muted hover:text-[#2dd4bf] transition-colors group/link flex items-center gap-1">
+                                    Details
+                                    <span className="transform group-hover/link:translate-x-0.5 transition-transform inline-block">→</span>
+                                  </Link>
+                                </div>
+                              </article>
+                            </Tilt3D>
+                          </RevealItem>
+                        ))}
+                      </Reveal>
+                    )}
+                  </div>
+                )}
+              </Reveal>
+            );
+          }
+
+          /* ── About Preview — bio + focus + stats ───────────── */
+          if (sec.type === 'about-preview') {
+            return (
+              <Reveal as="section" key={sec.id}>
+                <div className="section-divider-glow mb-14" aria-hidden />
+                <SectionHeader
+                  index={numberFor[sec.id]}
+                  overline="Who I am"
+                  title="About"
+                  href="/about"
+                  hrefLabel="full resume"
+                />
+
+                <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+                  <div className="card-glass rounded-2xl p-8 md:p-10 flex flex-col">
+                    <p className="text-base text-foreground/80 leading-relaxed mb-7 max-w-2xl">
+                      {bio ||
+                        'Geomatics engineer and software developer — bridging spatial intelligence with modern web systems.'}
+                    </p>
+
+                    {contactEntries.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-7">
+                        {contactEntries.slice(0, 5).map(([key, value]) => (
+                          <a
+                            key={key}
+                            href={socialLinkHref(key, value)}
+                            target={key === 'email' || key === 'phone' ? undefined : '_blank'}
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono rounded-lg border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-muted hover:border-[rgba(45,212,191,0.3)] hover:text-[#2dd4bf] transition-all duration-200"
                           >
-                            {t}
-                          </span>
+                            {socialLinkLabel(key)}
+                          </a>
                         ))}
                       </div>
                     )}
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {p.deployed && p.demoUrl && (
-                        <a
-                          href={p.demoUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center rounded-button border border-primary/35 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
-                        >
-                          Demo
-                        </a>
-                      )}
-                      {p.viewCode && p.codeUrl && (
-                        <a
-                          href={p.codeUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center rounded-button border border-border px-3 py-1.5 text-xs font-medium text-muted hover:text-primary hover:border-primary/35 transition-colors"
-                        >
-                          View Code
-                        </a>
-                      )}
-                      <Link
-                        href={`/projects/${p.slug}`}
-                        className="inline-flex items-center justify-center rounded-button border border-border px-3 py-1.5 text-xs font-medium text-muted hover:text-primary hover:border-primary/35 transition-colors"
+
+                    <Link
+                      href="/about"
+                      className="group inline-flex items-center gap-2 text-sm text-[#2dd4bf]/70 hover:text-[#2dd4bf] transition-colors font-mono mt-auto"
+                    >
+                      Read full resume
+                      <span className="transform group-hover:translate-x-1 transition-transform inline-block">→</span>
+                    </Link>
+                  </div>
+
+                  {/* Stat bento */}
+                  <div className="grid grid-cols-2 gap-5">
+                    {[
+                      { value: projects.length, label: 'Projects', accent: 'rgba(45,212,191,0.1)' },
+                      { value: experience.length, label: 'Roles', accent: 'rgba(139,92,246,0.1)' },
+                      { value: skills.length, label: 'Skills', accent: 'rgba(6,182,212,0.1)' },
+                      { value: blogs.length, label: 'Articles', accent: 'rgba(45,212,191,0.08)' },
+                    ].map(({ value, label, accent }) => (
+                      <div
+                        key={label}
+                        className="card-glass rounded-2xl p-6 flex flex-col justify-center"
+                        style={{ background: `radial-gradient(ellipse 120% 120% at 0% 0%, ${accent}, transparent 70%), rgba(11,19,34,0.6)` }}
                       >
-                        Details
-                      </Link>
-                    </div>
-                  </article>
-                ))}
-              </div>
-              <Link
-                href="/projects"
-                className="inline-block mt-4 text-primary font-medium hover:underline"
-              >
-                View all →
-              </Link>
-              {featuredProjects.length === 0 && (
-                <p className="text-muted">No featured projects yet.</p>
-              )}
-            </section>
-          );
-        }
-        if (sec.type === 'about-preview') {
-          return (
-            <section key={sec.id}>
-              <h2 className="text-2xl font-semibold text-primary mb-6">About</h2>
-              <div className="max-w-2xl">
-                <p className="text-muted">
-                  Learn more about my background and approach.
-                </p>
-                <Link href="/about" className="inline-block mt-4 text-primary font-medium hover:underline">
-                  Read more →
-                </Link>
-              </div>
-            </section>
-          );
-        }
-        if (sec.type === 'skills-snapshot') {
-          return (
-            <section key={sec.id}>
-              <h2 className="text-2xl font-semibold text-primary mb-6">Skills</h2>
-              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-                {skills.slice(0, 12).map((s) => (
-                  <article
-                    key={s.id}
-                    className={`rounded-button border p-3 min-h-[82px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card ${skillCardTone(
-                      s.name,
-                    )}`}
-                  >
-                    <div className="flex flex-col items-center justify-center text-center gap-2 h-full">
-                      <span className="w-8 h-8 rounded-button bg-background/55 border border-white/10 flex items-center justify-center overflow-hidden">
-                        <HomeSkillIcon name={s.name} icon={s.icon} />
-                      </span>
-                      <span className="text-xs sm:text-sm font-semibold text-muted leading-tight group-hover:text-foreground transition-colors">
-                        {s.name}
-                      </span>
-                    </div>
-                  </article>
-                ))}
-              </div>
-              <Link
-                href="/about#skills"
-                className="inline-block mt-4 text-primary font-medium hover:underline"
-              >
-                View all →
-              </Link>
-            </section>
-          );
-        }
-        if (sec.type === 'experience-preview') {
-          return (
-            <section key={sec.id}>
-              <h2 className="text-2xl font-semibold text-primary mb-6">Experience</h2>
-              <ul className="space-y-4">
-                {experience.slice(0, 3).map((e) => (
-                  <li key={e.id}>
-                    <p className="font-medium text-primary">{e.role}</p>
-                    <p className="text-sm text-muted">{e.organization} · {e.startDate} – {e.endDate}</p>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/experience"
-                className="inline-block mt-4 text-primary font-medium hover:underline"
-              >
-                Full timeline →
-              </Link>
-            </section>
-          );
-        }
-        if (sec.type === 'latest-blogs') {
-          return (
-            <section key={sec.id}>
-              <h2 className="text-2xl font-semibold text-primary mb-6">Latest from the Blog</h2>
-              <div className="space-y-3">
-                {latestBlogs.map((b) => (
-                  <Link
-                    key={b.id}
-                    href={`/blog/${b.slug}`}
-                    className={`card-project p-4 hover:border-primary/35 ${flashCardTone(b.title)}`}
-                  >
-                    <h3 className="font-medium text-primary">{b.title}</h3>
-                    <p className="text-sm text-muted">
-                      {b.publishedAt ? new Date(b.publishedAt).toLocaleDateString() : ''}
+                        <div className="text-3xl md:text-4xl font-bold tabular-nums text-gradient-primary">{value}+</div>
+                        <div className="text-[11px] text-muted font-mono uppercase tracking-wider mt-1">{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Reveal>
+            );
+          }
+
+          /* ── Skills Snapshot ───────────────────────────────── */
+          if (sec.type === 'skills-snapshot') {
+            return (
+              <Reveal as="section" key={sec.id}>
+                <div className="section-divider-glow mb-14" aria-hidden />
+                <SectionHeader
+                  index={numberFor[sec.id]}
+                  overline="Tech Stack"
+                  title="Skills"
+                  href="/about#skills"
+                  hrefLabel="view all"
+                />
+                <SkillsMarquee skills={skills} />
+              </Reveal>
+            );
+          }
+
+          /* ── Experience Preview — timeline ─────────────────── */
+          if (sec.type === 'experience-preview') {
+            const items = experience.slice(0, 4);
+            return (
+              <Reveal as="section" key={sec.id}>
+                <div className="section-divider-glow mb-14" aria-hidden />
+                <SectionHeader
+                  index={numberFor[sec.id]}
+                  overline="Career"
+                  title="Experience"
+                  href="/about#experience"
+                  hrefLabel="full timeline"
+                />
+
+                <Reveal
+                  stagger={0.1}
+                  className="relative pl-7"
+                  style={{ borderLeft: '2px solid rgba(45,212,191,0.14)' }}
+                >
+                  {items.map((e) => (
+                    <RevealItem key={e.id} className="relative pb-6 last:pb-0">
+                      <span className="absolute -left-[34px] top-1 timeline-dot" />
+                      <div className="exp-card-home px-6 py-5 flex items-start gap-5 group">
+                        <div className="shrink-0 flex flex-col items-center pt-0.5 w-12">
+                          <span className="text-[11px] font-mono font-semibold" style={{ color: 'rgba(45,212,191,0.6)' }}>
+                            {e.startDate?.slice(0, 4) ?? '----'}
+                          </span>
+                          <div className="w-px h-5 bg-[rgba(45,212,191,0.18)] my-1" />
+                          <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.22)' }}>
+                            {e.endDate?.slice(0, 4) ?? 'now'}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-foreground text-[15px] group-hover:text-[#2dd4bf] transition-colors mb-0.5">
+                            {e.role}
+                          </p>
+                          <p className="text-xs text-muted">
+                            {e.organization}
+                            {e.location ? ` · ${e.location}` : ''}
+                          </p>
+                          {e.description?.[0] && (
+                            <p className="text-[13px] mt-2 line-clamp-1" style={{ color: 'rgba(100,116,139,0.8)' }}>
+                              {e.description[0]}
+                            </p>
+                          )}
+                        </div>
+                        <div className="shrink-0 flex flex-col items-end gap-1.5 mt-0.5">
+                          {e.workMode && <span className="work-mode-badge">{e.workMode}</span>}
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[rgba(139,92,246,0.2)] text-[rgba(139,92,246,0.55)] bg-[rgba(139,92,246,0.05)]">
+                            {e.type}
+                          </span>
+                        </div>
+                      </div>
+                    </RevealItem>
+                  ))}
+                </Reveal>
+              </Reveal>
+            );
+          }
+
+          /* ── Latest Blogs — featured first + list ──────────── */
+          if (sec.type === 'latest-blogs') {
+            const [lead, ...restBlogs] = latestBlogs;
+            const fmt = (d?: string | Date | null) =>
+              d
+                ? `${new Date(d).toLocaleDateString('en-US', { month: 'short' })} ${new Date(d).getFullYear()}`
+                : '—';
+            return (
+              <Reveal as="section" key={sec.id}>
+                <div className="section-divider-glow mb-14" aria-hidden />
+                <SectionHeader
+                  index={numberFor[sec.id]}
+                  overline="Thoughts"
+                  title="Latest Writing"
+                  href="/blog"
+                  hrefLabel="all posts"
+                />
+
+                {!lead ? (
+                  <p className="text-muted text-sm">No posts published yet.</p>
+                ) : (
+                  <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
+                    {/* Lead post */}
+                    <Link
+                      href={`/blog/${lead.slug}`}
+                      className="card-project card-gradient-border p-7 md:p-8 flex flex-col group hover:no-underline justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="tag-category">Latest</span>
+                          <span className="text-[11px] font-mono text-muted">{fmt(lead.publishedAt)}</span>
+                        </div>
+                        <h3 className="text-xl md:text-2xl font-bold text-foreground group-hover:text-[#2dd4bf] transition-colors leading-snug mb-3">
+                          {lead.title}
+                        </h3>
+                        {lead.excerpt && <p className="text-sm text-muted leading-relaxed line-clamp-3 mb-5">{lead.excerpt}</p>}
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {lead.tags?.slice(0, 3).map((tag) => (
+                          <span key={tag} className="tag-tech">{tag}</span>
+                        ))}
+                        <span className="ml-auto text-sm text-[#2dd4bf]/70 group-hover:text-[#2dd4bf] flex items-center gap-1 transition-colors">
+                          Read <span className="transform group-hover:translate-x-0.5 transition-transform inline-block">→</span>
+                        </span>
+                      </div>
+                    </Link>
+
+                    {/* Compact list */}
+                    {restBlogs.length > 0 && (
+                      <Reveal stagger={0.09} className="flex flex-col gap-3">
+                        {restBlogs.map((b) => (
+                          <RevealItem key={b.id} className="h-full">
+                            <Link
+                              href={`/blog/${b.slug}`}
+                              className="card-project flex items-start gap-4 px-5 py-4 group hover:no-underline h-full"
+                            >
+                              <div className="shrink-0 w-12 pt-0.5">
+                                <div className="text-[10px] font-mono font-semibold uppercase" style={{ color: 'rgba(45,212,191,0.55)' }}>
+                                  {b.publishedAt ? new Date(b.publishedAt).toLocaleDateString('en-US', { month: 'short' }) : '—'}
+                                </div>
+                                <div className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                                  {b.publishedAt ? new Date(b.publishedAt).getFullYear() : ''}
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-medium text-foreground text-sm group-hover:text-[#2dd4bf] transition-colors leading-snug mb-1 line-clamp-2">
+                                  {b.title}
+                                </h3>
+                                {b.excerpt && <p className="text-[11px] text-muted line-clamp-1">{b.excerpt}</p>}
+                              </div>
+                              <span className="text-muted group-hover:text-[#2dd4bf] transition-colors transform group-hover:translate-x-1 inline-block text-sm self-center">
+                                →
+                              </span>
+                            </Link>
+                          </RevealItem>
+                        ))}
+                      </Reveal>
+                    )}
+                  </div>
+                )}
+              </Reveal>
+            );
+          }
+
+          /* ── CTA ───────────────────────────────────────────── */
+          if (sec.type === 'cta') {
+            return (
+              <Reveal as="section" key={sec.id} className="py-6">
+                <div
+                  className="relative overflow-hidden rounded-[24px] border border-[rgba(255,255,255,0.07)] p-12 md:p-16 text-center"
+                  style={{
+                    background:
+                      'radial-gradient(ellipse 70% 120% at 50% 100%, rgba(45,212,191,0.11) 0%, rgba(139,92,246,0.08) 40%, rgba(7,12,24,0.96) 100%)',
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      backgroundImage:
+                        'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 0)',
+                      backgroundSize: '28px 28px',
+                    }}
+                    aria-hidden
+                  />
+                  <span className="absolute top-4 left-5 text-[9px] font-mono text-[rgba(45,212,191,0.2)] select-none">
+                    01 / contact
+                  </span>
+                  <span className="absolute bottom-4 right-5 text-[9px] font-mono text-[rgba(139,92,246,0.2)] select-none">
+                    open_to_work
+                  </span>
+                  <div className="relative">
+                    <p className="tag-category mb-5">Open to opportunities</p>
+                    <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4 tracking-tight">
+                      Let&apos;s build something together
+                    </h2>
+                    <p className="text-sm text-muted mb-10 max-w-md mx-auto leading-relaxed">
+                      Geospatial systems, full-stack platforms, or something at the intersection — I&apos;m interested in meaningful work.
                     </p>
-                  </Link>
-                ))}
-              </div>
-              <Link
-                href="/blog"
-                className="inline-block mt-4 text-primary font-medium hover:underline"
-              >
-                All posts →
-              </Link>
-            </section>
-          );
-        }
-        if (sec.type === 'cta') {
-          return (
-            <section key={sec.id} className="py-12 text-center">
-              <h2 className="text-2xl font-semibold text-primary mb-3">Let&apos;s work together</h2>
-              <p className="text-muted mb-6 max-w-md mx-auto">
-                Have a project in mind? Get in touch.
-              </p>
-              <Link href="/contact" className="btn-cta">
-                Contact
-              </Link>
-            </section>
-          );
-        }
-        if (sec.type === 'custom' && sec.data) {
-          const title = (sec.data.title as string) || 'Section';
-          const content = (sec.data.content as string) || '';
-          return (
-            <section key={sec.id}>
-              <h2 className="text-2xl font-semibold text-primary mb-4">{title}</h2>
-              <MarkdownBody className="prose prose-neutral max-w-2xl prose-headings:text-primary prose-p:text-muted prose-a:text-primary">
-                {content}
-              </MarkdownBody>
-            </section>
-          );
-        }
-        if (sec.type === 'image' && sec.data?.url) {
-          const url = sec.data.url as string;
-          const caption = (sec.data.caption as string) || '';
-          return (
-            <section key={sec.id}>
-              <div className="max-w-3xl">
-                <div className="relative aspect-video rounded-card overflow-hidden bg-surface border border-border">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={url} alt={caption || 'Section image'} className="w-full h-full object-cover" />
+                    <div className="flex gap-3 justify-center flex-wrap">
+                      <Link href="/about" className="btn-cta">Get in touch</Link>
+                      <Link href="/projects" className="btn-outline">See my work</Link>
+                    </div>
+                  </div>
                 </div>
-                {caption && <p className="text-sm text-muted mt-2 text-center">{caption}</p>}
-              </div>
-            </section>
-          );
-        }
-        if (sec.type === 'video' && sec.data?.url) {
-          const url = (sec.data.url as string).trim();
-          const caption = (sec.data.caption as string) || '';
-          const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-          const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-          return (
-            <section key={sec.id}>
-              <div className="max-w-3xl">
-                <div className="relative aspect-video rounded-card overflow-hidden bg-surface border border-border">
-                  {ytMatch ? (
-                    <iframe
-                      src={`https://www.youtube.com/embed/${ytMatch[1]}`}
-                      title="Video"
-                      className="absolute inset-0 w-full h-full"
-                      allowFullScreen
-                    />
-                  ) : vimeoMatch ? (
-                    <iframe
-                      src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
-                      title="Video"
-                      className="absolute inset-0 w-full h-full"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <video src={url} controls className="w-full h-full object-contain" />
-                  )}
+              </Reveal>
+            );
+          }
+
+          /* ── Custom Markdown page section ─────────────────── */
+          if (sec.type === 'custom' && sec.data) {
+            const title = (sec.data.title as string) || 'Section';
+            const content = (sec.data.content as string) || '';
+            return (
+              <Reveal as="section" key={sec.id}>
+                <div className="section-divider-glow mb-14" aria-hidden />
+                <h2 className="text-2xl font-bold mb-6">
+                  <span className="text-gradient-primary">{title}</span>
+                </h2>
+                <MarkdownBody className="prose prose-neutral max-w-2xl prose-headings:text-foreground prose-p:text-muted prose-a:text-[#2dd4bf]">
+                  {content}
+                </MarkdownBody>
+              </Reveal>
+            );
+          }
+
+          /* ── Image section ─────────────────────────────────── */
+          if (sec.type === 'image' && sec.data?.url) {
+            const url = sec.data.url as string;
+            const caption = (sec.data.caption as string) || '';
+            return (
+              <Reveal as="section" key={sec.id}>
+                <div className="max-w-3xl">
+                  <div className="relative aspect-video rounded-[var(--radius-card)] overflow-hidden border border-[rgba(255,255,255,0.07)]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt={caption || 'Section image'} className="w-full h-full object-cover" />
+                  </div>
+                  {caption && <p className="text-xs text-muted mt-2 text-center font-mono">{caption}</p>}
                 </div>
-                {caption && <p className="text-sm text-muted mt-2 text-center">{caption}</p>}
-              </div>
-            </section>
-          );
-        }
-        return null;
-      })}
-    </div>
+              </Reveal>
+            );
+          }
+
+          /* ── Video section ─────────────────────────────────── */
+          if (sec.type === 'video' && sec.data?.url) {
+            const url = (sec.data.url as string).trim();
+            const caption = (sec.data.caption as string) || '';
+            const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+            const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+            return (
+              <Reveal as="section" key={sec.id}>
+                <div className="max-w-3xl">
+                  <div className="relative aspect-video rounded-[var(--radius-card)] overflow-hidden border border-[rgba(255,255,255,0.07)]">
+                    {ytMatch ? (
+                      <iframe
+                        src={`https://www.youtube.com/embed/${ytMatch[1]}`}
+                        title="Video"
+                        className="absolute inset-0 w-full h-full"
+                        allowFullScreen
+                      />
+                    ) : vimeoMatch ? (
+                      <iframe
+                        src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
+                        title="Video"
+                        className="absolute inset-0 w-full h-full"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video src={url} controls className="w-full h-full object-contain" />
+                    )}
+                  </div>
+                  {caption && <p className="text-xs text-muted mt-2 text-center font-mono">{caption}</p>}
+                </div>
+              </Reveal>
+            );
+          }
+
+          return null;
+        })}
+      </div>
+    </>
   );
-}
-
-function HomeSkillIcon({ name, icon }: { name: string; icon?: string | null }) {
-  const trimmed = icon?.trim();
-  const logoFromName = getSkillLogoUrl(name);
-  const logoFromIcon = trimmed ? getSkillLogoUrl(trimmed) : null;
-  const logoFromMap = logoFromName || logoFromIcon;
-  const directUrl = trimmed && /^https?:\/\//i.test(trimmed) ? toDisplayImageSrc(trimmed) : null;
-
-  if (directUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={directUrl}
-        alt=""
-        className="w-5 h-5 object-contain"
-        loading="lazy"
-        referrerPolicy="no-referrer"
-      />
-    );
-  }
-
-  if (logoFromMap) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={logoFromMap} alt="" className="w-5 h-5 object-contain" loading="lazy" />
-    );
-  }
-
-  if (trimmed) {
-    return <span className="text-[10px] font-bold text-secondary">{trimmed.slice(0, 3)}</span>;
-  }
-
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((x) => x[0]?.toUpperCase() ?? '')
-    .join('');
-  return <span className="text-[10px] font-bold text-primary">{initials || '?'}</span>;
-}
-
-function skillCardTone(name: string): string {
-  const tones = [
-    'border-primary/35 bg-gradient-to-br from-primary/20 via-surface to-surface',
-    'border-secondary/35 bg-gradient-to-br from-secondary/20 via-surface to-surface',
-    'border-accent/35 bg-gradient-to-br from-accent/20 via-surface to-surface',
-    'border-indigo-400/35 bg-gradient-to-br from-indigo-500/20 via-surface to-surface',
-    'border-cyan-400/35 bg-gradient-to-br from-cyan-500/20 via-surface to-surface',
-    'border-fuchsia-400/35 bg-gradient-to-br from-fuchsia-500/20 via-surface to-surface',
-  ];
-  const hash = Array.from(name).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return tones[hash % tones.length];
-}
-
-function normalizeSkillKey(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-function flashCardTone(seed: string): string {
-  const tones = [
-    'from-primary/20 via-surface to-surface border-primary/35',
-    'from-secondary/20 via-surface to-surface border-secondary/35',
-    'from-accent/20 via-surface to-surface border-accent/35',
-    'from-indigo-500/20 via-surface to-surface border-indigo-400/35',
-    'from-cyan-500/20 via-surface to-surface border-cyan-400/35',
-    'from-fuchsia-500/20 via-surface to-surface border-fuchsia-400/35',
-  ];
-  const idx = Array.from(seed).reduce((a, ch) => a + ch.charCodeAt(0), 0) % tones.length;
-  return `bg-gradient-to-br ${tones[idx]}`;
-}
-
-function getSkillLogoUrl(raw: string): string | null {
-  const key = normalizeSkillKey(raw);
-  const logos: Record<string, string> = {
-    c: 'https://skillicons.dev/icons?i=c',
-    cpp: 'https://skillicons.dev/icons?i=cpp',
-    cplusplus: 'https://skillicons.dev/icons?i=cpp',
-    html: 'https://cdn.simpleicons.org/html5/E34F26',
-    html5: 'https://cdn.simpleicons.org/html5/E34F26',
-    css: 'https://cdn.simpleicons.org/css/1572B6',
-    css3: 'https://cdn.simpleicons.org/css/1572B6',
-    tailwind: 'https://cdn.simpleicons.org/tailwindcss/06B6D4',
-    tailwindcss: 'https://cdn.simpleicons.org/tailwindcss/06B6D4',
-    javascript: 'https://cdn.simpleicons.org/javascript/F7DF1E',
-    react: 'https://cdn.simpleicons.org/react/61DAFB',
-    reactjs: 'https://cdn.simpleicons.org/react/61DAFB',
-    nextjs: 'https://cdn.simpleicons.org/nextdotjs/FFFFFF',
-    typescript: 'https://cdn.simpleicons.org/typescript/3178C6',
-    redux: 'https://cdn.simpleicons.org/redux/764ABC',
-    node: 'https://cdn.simpleicons.org/nodedotjs/339933',
-    nodejs: 'https://cdn.simpleicons.org/nodedotjs/339933',
-    express: 'https://cdn.simpleicons.org/express/FFFFFF',
-    expressjs: 'https://cdn.simpleicons.org/express/FFFFFF',
-    mongodb: 'https://cdn.simpleicons.org/mongodb/47A248',
-    kafka: 'https://skillicons.dev/icons?i=kafka',
-    postgresql: 'https://cdn.simpleicons.org/postgresql/4169E1',
-    prisma: 'https://cdn.simpleicons.org/prisma/2D3748',
-    prismaorm: 'https://cdn.simpleicons.org/prisma/2D3748',
-    postman: 'https://skillicons.dev/icons?i=postman',
-    restapi: 'https://cdn.simpleicons.org/postman/FF6C37',
-    restapis: 'https://cdn.simpleicons.org/postman/FF6C37',
-    websocket: 'https://cdn.simpleicons.org/socketdotio/FFFFFF',
-    websockets: 'https://cdn.simpleicons.org/socketdotio/FFFFFF',
-    jwt: 'https://cdn.simpleicons.org/jsonwebtokens/FFFFFF',
-    oauth: 'https://cdn.simpleicons.org/auth0/EB5424',
-    git: 'https://cdn.simpleicons.org/git/F05032',
-    github: 'https://cdn.simpleicons.org/github/FFFFFF',
-    cloudflare: 'https://skillicons.dev/icons?i=cloudflare',
-    cloudflarecdn: 'https://skillicons.dev/icons?i=cloudflare',
-    vercel: 'https://cdn.simpleicons.org/vercel/FFFFFF',
-    netlify: 'https://cdn.simpleicons.org/netlify/00C7B7',
-    render: 'https://cdn.simpleicons.org/render/46E3B7',
-    railway: 'https://cdn.simpleicons.org/railway/FFFFFF',
-    docker: 'https://cdn.simpleicons.org/docker/2496ED',
-    figma: 'https://cdn.simpleicons.org/figma/F24E1E',
-    twilio: 'https://cdn.simpleicons.org/twilio/F22F46',
-    twilioapi: 'https://cdn.simpleicons.org/twilio/F22F46',
-    stripe: 'https://cdn.simpleicons.org/stripe/635BFF',
-    stripeapi: 'https://cdn.simpleicons.org/stripe/635BFF',
-    openai: 'https://cdn.simpleicons.org/openai/10A37F',
-    openaiapi: 'https://cdn.simpleicons.org/openai/10A37F',
-    gemini: 'https://cdn.simpleicons.org/googlegemini/8E75B2',
-    geminiapi: 'https://cdn.simpleicons.org/googlegemini/8E75B2',
-    firebase: 'https://cdn.simpleicons.org/firebase/FFCA28',
-    aws: 'https://cdn.simpleicons.org/amazonwebservices/FF9900',
-    langchain: 'https://cdn.simpleicons.org/langchain/1C3C3C',
-    python: 'https://cdn.simpleicons.org/python/3776AB',
-    mcp: '/logos/mcp.svg',
-    arcgis: 'https://cdn.simpleicons.org/esri/FFFFFF',
-    qgis: 'https://cdn.simpleicons.org/qgis/589632',
-    webgis: 'https://cdn.simpleicons.org/openstreetmap/7EBC6F',
-    remotesensing: 'https://cdn.simpleicons.org/googleearth/4285F4',
-    machinelearning: 'https://cdn.simpleicons.org/tensorflow/FF6F00',
-    sentinel2: '/logos/sentinel2.svg',
-    leaflet: 'https://cdn.simpleicons.org/leaflet/199900',
-    leafletjs: 'https://cdn.simpleicons.org/leaflet/199900',
-  };
-  return logos[key] ?? null;
-}
-
-function toDisplayImageSrc(url: string): string {
-  const filePath = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-  const openId = url.match(/drive\.google\.com\/open\?[^#]*id=([a-zA-Z0-9_-]+)/);
-  const id = filePath?.[1] || openId?.[1];
-  if (id) return `/api/cert-image?id=${encodeURIComponent(id)}`;
-  return url;
 }

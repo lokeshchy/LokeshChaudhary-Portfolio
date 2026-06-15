@@ -8,7 +8,6 @@ const SYSTEM_SLUGS = [
   'projects',
   'blog',
   'experience',
-  'contact',
   'certifications',
   'certification',
 ];

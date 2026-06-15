@@ -7,7 +7,7 @@ export default async function HomePage() {
   const hero = page?.content?.hero ?? { title: 'Hi', subtitles: [], ctaText: 'View Work', ctaLink: '/projects' };
 
   return (
-    <div className="max-w-content mx-auto px-6 py-12">
+    <div className="w-full px-6 md:px-10 lg:px-16 xl:px-24 py-12">
       <HomeSections sections={sections} hero={hero} />
     </div>
   );

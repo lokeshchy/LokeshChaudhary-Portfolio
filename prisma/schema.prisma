@@ -35,6 +35,7 @@ model Experience {
   role        String
   organization String
   location    String?
+  workMode    String?  // Onsite | Hybrid | Remote (extensible via CMS constants)
   startDate   String
   endDate     String   // "Present" or date
   description String   // JSON array of bullet points
